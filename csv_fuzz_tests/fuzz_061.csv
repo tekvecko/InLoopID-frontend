@@ -1,0 +1,14 @@
+emp_id,fname,lname,email_address,dept
+8528,Karel,Bílá,tomáš.král@external.net,Intern
+3740,Karel,Bílá,karel.němcová@external.net,HR
+1222,Martin,Novák,eva.bílá@external.net,Vendor
+3689,Tomáš,Bílá,anna.král@company.com,Engineer
+1410,Petr,Dvořák,petra.král@firma.cz,Engineer
+9552,Petra,Dvořák,martin.svoboda@firma.cz,Manager
+1568,Tomáš,Novák,jan.král@company.com,Manager
+2787,Karel,Svoboda,anna.svoboda@gmail.com,HR
+7920,Petr,Novák,no.domain@,HR
+8027,Anna,Novák,missing-at.com,Vendor
+6330,Karel,Procházka,broken@domain,Engineer,EXTRA_COLUMN_BbuTM
+3245,Eva,Dvořák,jana.král@company.com,Manager
+3245,Eva,Dvořák,jana.král@company.com,Manager

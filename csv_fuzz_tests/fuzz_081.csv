@@ -1,0 +1,19 @@
+emp_id	fname	lname	email_address	dept
+6501	Karel	Novák	petr.malá@gmail.com	HR
+6070	Petr	Procházka	jan.král@external.net	Engineer
+5408	Eva	Němcová	@missinguser.cz	Vendor
+8970	Petr	Král	petra.novák@company.com	Engineer
+7433	Jana	Král	martin.němcová@company.com	Engineer	
+9379	Petra	Procházka	broken@domain	Vendor
+4711	Jan	Svoboda	petr.němcová@gmail.com	Manager
+6193	Jana
+7540	Martin	Svoboda	anna.svoboda@vendor.io	Manager
+9813	Lucie	Němcová	user@firma	Engineer	EXTRA_COLUMN_YEasP
+7323	Petr	Procházka	invalid-email	Engineer
+1420	Jana	Bílá	anna.procházka@seznam.cz	Vendor
+9849	Jana	Dvořák	user@firma	Vendor
+9849	Jana	Dvořák	user@firma	Vendor
+7684	Petra	Dvořák	martin.němcová@vendor.io	HR
+6418	Petr	Svoboda	petra.svoboda@gmail.com	Manager
+2013	Karel	Procházka	invalid-email	Intern
+8314	Petr	Dvořák	anna.bílá@external.net	Manager

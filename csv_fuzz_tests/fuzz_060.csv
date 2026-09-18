@@ -1,0 +1,16 @@
+ID|Name|Surname|Mail|Position
+3123|Anna|Novák|@missinguser.cz|Vendor
+4751|Petra|Bílá|@missinguser.cz|Intern
+9531|Martin|Dvořák|tomáš.procházka@gmail.com|HR
+7188	Petr	Král	lucie.dvořák@firma.cz	Engineer
+7858,Anna,Dvořák,tomáš.svoboda@external.net,Intern
+9432|Tomáš|Bílá|invalid-email|Intern|EXTRA_COLUMN_SJmbS
+7949,Martin,Bílá,tomáš.svoboda@firma.cz,Manager
+2634|
+4049	Lucie	Svoboda	karel.němcová@vendor.io	Intern
+8741;Martin;Novák;broken@domain;Intern
+5006|Eva|Král|jana.dvořák@firma.cz|Intern
+6387	Martin	Dvořák	martin.novák@seznam.cz	Engineer
+4447;Tomáš;Malá;no.domain@;Engineer;EXTRA_COLUMN_wghfI
+7125|Petr|Novák|user@firma|Intern
+7524;Jana;Bílá;karel.bílá@firma.cz;HR

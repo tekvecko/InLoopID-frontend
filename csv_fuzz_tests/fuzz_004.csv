@@ -1,0 +1,13 @@
+emp_id,fname,lname,email_address,dept
+4666,,Svoboda,eva.dvořák@external.net,HR,EXTRA_COLUMN_fFLiZ
+3615,Eva,Svoboda,,Intern,EXTRA_COLUMN_wHkar
+5924,Martin,Svoboda,missing-at.com,Manager
+9555,Jan,Němcová,lucie.novák@company.com,HR
+7425,Lucie,Král,no.domain@,Intern,EXTRA_COLUMN_luKFd
+7695,Tomáš,Král,user@firma,Engineer,EXTRA_COLUMN_VBMgR
+5563,Jan,Němcová,martin.němcová@vendor.io,Engineer
+2616,,Malá,broken@domain,Engineer,EXTRA_COLUMN_nriEG
+2509,Tomáš,Procházka,jan.král@external.net,HR
+9871,Karel,Němcová,eva.malá@external.net,Intern,EXTRA_COLUMN_LEIwi
+8253,Petr
+5614,Petr

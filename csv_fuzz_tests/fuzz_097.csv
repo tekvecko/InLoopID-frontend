@@ -1,0 +1,16 @@
+EmployeeID	FirstName	LastName	Email	Role
+9586|Jana|Dvořák|jana.svoboda@vendor.io|Vendor|EXTRA_COLUMN_mukxv
+9640|Jana|Dvořák|anna.svoboda@external.net|Intern
+7303	Lucie	Svoboda	anna.malá@vendor.io	Manager
+2132|Tomáš|Němcová|jana.dvořák@external.net|Manager
+8217	Petra	Procházka	jana.bílá@seznam.cz	Intern	EXTRA_COLUMN_KCmMp
+2850;Jan;Němcová;eva.malá@gmail.com;Vendor
+3867,Tomáš,Novák,tomáš.němcová@gmail.com,Engineer,EXTRA_COLUMN_IwNGz
+9922;Lucie;Bílá;broken@domain;Vendor
+1179,Petra,Bílá,petra.malá@vendor.io,Engineer
+5041		Malá	no.domain@	HR	EXTRA_COLUMN_eEMbx
+6095,Jan,Procházka,invalid-email,Manager
+7610	Karel	Novák	invalid-email	Engineer
+3100,Lucie,Svoboda,petra.malá@seznam.cz,Vendor
+8103,Karel,Bílá,martin.novák@vendor.io,HR
+7126	Eva	Bílá	jan.novák@firma.cz	Manager

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InLoopID - Interaktivní Dema</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#0f172a',
+                        slate: '#1e293b',
+                        accent: '#3b82f6',
+                        success: '#10b981'
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Courier New', 'Courier', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; }
+        .tab-btn.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .word-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+        .shard-btn { transition: all 0.2s; }
+        .shard-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .shard-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .vault-status { transition: all 0.5s; }
+        .vault-unlocked { background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
+        .vault-unlocked i { color: #10b981; }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">INLOOP<span class="text-accent">ID</span> Enterprise</h1>
+            <p class="text-slate-400 text-lg">Interaktivní ukázky bezpečnostní architektury z prostředí prohlížeče</p>
+        </div>
+
+        <div class="flex justify-center space-x-8 mb-8 border-b border-slate-700">
+            <button onclick="switchTab('pipeline')" id="tab-pipeline" class="tab-btn active pb-4 px-2 text-lg font-medium text-slate-300 hover:text-accent transition-colors">1. Zero-Knowledge Smlouva</button>
+            <button onclick="switchTab('ceremony')" id="tab-ceremony" class="tab-btn pb-4 px-2 text-lg font-medium text-slate-300 hover:text-accent transition-colors">2. Key Ceremony</button>
+            <button onclick="switchTab('shamir')" id="tab-shamir" class="tab-btn pb-4 px-2 text-lg font-medium text-slate-300 hover:text-accent transition-colors">3. Shamir Recovery</button>
+        </div>
+
+        <div id="content-pipeline" class="tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center"><i class="fa-solid fa-laptop text-accent mr-3"></i> Zařízení HR klienta</h2>
+                    <div class="mb-6">
+                        <label class="block text-slate-400 text-sm font-bold mb-2">Obsah pracovní smlouvy (čitelný):</label>
+                        <textarea id="demo1-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-slate-200 focus:outline-none focus:border-accent font-mono text-sm" rows="4">PRACOVNÍ SMLOUVA: Jan Novák
+Pozice: Senior Developer
+Plat: 85 000 CZK
+Rodné číslo: 900101/1234</textarea>
+                    </div>
+                    <button onclick="runPipeline()" class="w-full bg-accent hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                        <i class="fa-solid fa-lock mr-2"></i> Zašifrovat lokálně a odeslat
+                    </button>
+                </div>
+
+                <div class="glass-card p-8 relative">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center"><i class="fa-solid fa-server text-slate-400 mr-3"></i> Server InLoopID (Slepý notář)</h2>
+                    
+                    <div id="demo1-server-view" class="opacity-30 transition-opacity duration-1000">
+                        <div class="mb-6">
+                            <label class="block text-slate-400 text-sm font-bold mb-2">Co server přijme do databáze (Kryptografický šum):</label>
+                            <div id="demo1-payload" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-success font-mono text-xs break-all h-24 overflow-hidden">
+                                Čeká na data z klienta...
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 border-t border-slate-700 pt-6">
+                            <h3 class="font-bold mb-4 flex items-center"><i class="fa-solid fa-stamp text-accent mr-2"></i> eIDAS TSA & Blockchain</h3>
+                            <div class="bg-slate-900 rounded p-3 font-mono text-xs text-slate-400 flex items-center">
+                                <i id="demo1-spinner" class="fa-solid fa-circle-notch fa-spin mr-3 hidden text-accent"></i>
+                                <span id="demo1-audit">Čeká na fixaci...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-ceremony" class="tab-content">
+            <div class="glass-card p-8 text-center mb-8">
+                <h2 class="text-2xl font-bold mb-4">Enterprise Key Generation Ceremony</h2>
+                <p class="text-slate-400 mb-6">Vygenerování Master klíče a jeho bezpečné rozdělení (Shamir 2-ze-3) do formátu 24 slov pro fyzické uložení do trezoru.</p>
+                <button onclick="generateCeremony()" class="bg-accent hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                    <i class="fa-solid fa-key mr-2"></i> Generovat a rozdělit klíče
+                </button>
+            </div>
+
+            <div id="ceremony-results" class="grid grid-cols-1 md:grid-cols-3 gap-6 hidden">
+                <div class="glass-card p-6 border-t-4 border-accent">
+                    <h3 class="font-bold text-accent mb-4 text-center">ŠARD 1: CEO (Trezor A)</h3>
+                    <div id="ceremony-words-1" class="word-grid text-sm font-mono text-slate-300"></div>
+                </div>
+                <div class="glass-card p-6 border-t-4 border-success">
+                    <h3 class="font-bold text-success mb-4 text-center">ŠARD 2: HR (Trezor B)</h3>
+                    <div id="ceremony-words-2" class="word-grid text-sm font-mono text-slate-300"></div>
+                </div>
+                <div class="glass-card p-6 border-t-4 border-yellow-500">
+                    <h3 class="font-bold text-yellow-500 mb-4 text-center">ŠARD 3: Právní (Trezor C)</h3>
+                    <div id="ceremony-words-3" class="word-grid text-sm font-mono text-slate-300"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-shamir" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-6">Obnova přístupu (Recovery)</h2>
+                    <p class="text-slate-400 mb-8">Kritická situace: HR oddělení ztratilo přístup k systému. Pro odemčení databáze je nutné spojit alespoň 2 ze 3 částí Master klíče.</p>
+                    
+                    <div class="space-y-4">
+                        <button id="btn-shard-1" onclick="insertShard(1, 'CEO', 'text-accent')" class="shard-btn w-full bg-slate-800 border border-slate-600 hover:border-accent text-left py-4 px-6 rounded-lg flex items-center justify-between">
+                            <span><i class="fa-solid fa-user-tie text-accent mr-3"></i> Vložit ŠARD 1 (CEO)</span>
+                            <i id="check-shard-1" class="fa-solid fa-circle-check text-slate-600"></i>
+                        </button>
+                        <button id="btn-shard-2" onclick="insertShard(2, 'HR Ředitel', 'text-success')" class="shard-btn w-full bg-slate-800 border border-slate-600 hover:border-success text-left py-4 px-6 rounded-lg flex items-center justify-between">
+                            <span><i class="fa-solid fa-users text-success mr-3"></i> Vložit ŠARD 2 (HR Ředitel)</span>
+                            <i id="check-shard-2" class="fa-solid fa-circle-check text-slate-600"></i>
+                        </button>
+                        <button id="btn-shard-3" onclick="insertShard(3, 'Právní', 'text-yellow-500')" class="shard-btn w-full bg-slate-800 border border-slate-600 hover:border-yellow-500 text-left py-4 px-6 rounded-lg flex items-center justify-between">
+                            <span><i class="fa-solid fa-gavel text-yellow-500 mr-3"></i> Vložit ŠARD 3 (Právní)</span>
+                            <i id="check-shard-3" class="fa-solid fa-circle-check text-slate-600"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card p-8 flex flex-col items-center justify-center vault-status border-2 border-slate-700" id="vault-container">
+                    <div class="text-center mb-8">
+                        <i id="vault-icon" class="fa-solid fa-vault text-8xl text-slate-600 mb-6 transition-colors duration-500"></i>
+                        <h3 id="vault-text" class="text-2xl font-bold text-slate-400">DATABÁZE UZAMČENA</h3>
+                        <p id="vault-subtext" class="text-slate-500 mt-2">Vloženo klíčů: <span id="shard-count" class="text-white font-bold">0</span> / 2 potřebných</p>
+                    </div>
+                    
+                    <div id="reconstruction-log" class="w-full bg-slate-900 rounded-lg p-4 font-mono text-sm text-slate-400 h-32 overflow-y-auto">
+                        > Systém čeká na klientské klíče...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'text-accent'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.add('text-slate-300'));
+            
+            document.getElementById('content-' + tabId).classList.add('active');
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.classList.add('active', 'text-accent');
+            activeBtn.classList.remove('text-slate-300');
+        }
+
+        async function runPipeline() {
+            const inputTxt = document.getElementById('demo1-input').value;
+            const serverView = document.getElementById('demo1-server-view');
+            const payloadBox = document.getElementById('demo1-payload');
+            const auditBox = document.getElementById('demo1-audit');
+            const spinner = document.getElementById('demo1-spinner');
+            
+            serverView.classList.remove('opacity-30');
+            payloadBox.innerHTML = '<span class="text-slate-500">Probíhá lokální AES-256-GCM šifrování na vašem zařízení...</span>';
+            auditBox.innerText = 'Čeká na data...';
+            
+            const encoder = new TextEncoder();
+            const data = encoder.encode(inputTxt + Date.now().toString());
+            const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+            
+            setTimeout(() => {
+                payloadBox.innerHTML = `<div>[ENCRYPTED_PAYLOAD_BASE64]</div><div class="mt-2 text-[10px] break-all leading-tight text-slate-400">U2FsdGVkX1+${hex}${hex}</div>`;
+                spinner.classList.remove('hidden');
+                auditBox.innerText = 'Vyžaduji kvalifikované časové razítko (eIDAS)...';
+                
+                setTimeout(() => {
+                    spinner.classList.add('hidden');
+                    auditBox.innerHTML = `<span class="text-success"><i class="fa-solid fa-check mr-2"></i> eIDAS TSA Pečeť a OTS Blockchain ukotvení proběhlo úspěšně.</span>`;
+                }, 1500);
+            }, 1000);
+        }
+
+        const bip39Words = ["apple", "desk", "ocean", "lamp", "stone", "river", "cloud", "bird", "winter", "fire", "gold", "seed", "trust", "vault", "shield", "lock", "key", "safe", "guard", "wall", "gate", "door", "path", "way", "abstract", "code", "data", "hash"];
+        
+        function generateCeremony() {
+            document.getElementById('ceremony-results').classList.remove('hidden');
+            for(let i=1; i<=3; i++) {
+                let shuffled = [...bip39Words].sort(() => 0.5 - Math.random()).slice(0, 24);
+                let html = '';
+                shuffled.forEach((word, index) => {
+                    html += `<div><span class="text-slate-500">${String(index+1).padStart(2, '0')}.</span> ${word}</div>`;
+                });
+                document.getElementById(`ceremony-words-${i}`).innerHTML = html;
+            }
+        }
+
+        let insertedShards = 0;
+        let logText = "> Systém čeká na klientské klíče...\n";
+
+        function insertShard(shardId, roleName, colorClass) {
+            const btn = document.getElementById(`btn-shard-${shardId}`);
+            btn.disabled = true;
+            btn.classList.add('border-slate-500', 'opacity-50');
+            document.getElementById(`check-shard-${shardId}`).classList.replace('text-slate-600', colorClass.replace('text-', 'text-'));
+            
+            insertedShards++;
+            document.getElementById('shard-count').innerText = insertedShards;
+            
+            const logBox = document.getElementById('reconstruction-log');
+            logText += `<div class="${colorClass}">> Přijat ŠARD ${shardId} (${roleName}). Verifikace OK.</div>`;
+            logBox.innerHTML = logText;
+            
+            if (insertedShards === 2) {
+                logText += `<div class="text-accent">> Dosažen práh 2-ze-3. Zahajuji interpolaci...</div>`;
+                logBox.innerHTML = logText;
+                [1,2,3].forEach(id => document.getElementById(`btn-shard-${id}`).disabled = true);
+                
+                setTimeout(() => {
+                    document.getElementById('vault-container').classList.add('vault-unlocked');
+                    document.getElementById('vault-icon').classList.replace('fa-vault', 'fa-lock-open');
+                    document.getElementById('vault-text').innerText = "DATABÁZE ODEMČENA";
+                    document.getElementById('vault-text').classList.replace('text-slate-400', 'text-success');
+                    
+                    logText += `<div class="text-success font-bold mt-2">> MASTER KLÍČ REKONSTRUOVÁN. Přístup obnoven.</div>`;
+                    logBox.innerHTML = logText;
+                    logBox.scrollTop = logBox.scrollHeight;
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>

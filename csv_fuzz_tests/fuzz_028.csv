@@ -1,0 +1,15 @@
+ID	Name	Surname	Mail	Position
+5162;Petra;Král;petra.svoboda@external.net;Engineer;EXTRA_COLUMN_YohRD
+4834,Jan,Svoboda,lucie.bílá@vendor.io,Engineer
+2403	Petr	Svoboda	petra.dvořák@gmail.com	Vendor
+3095,Jan,Král,petr.svoboda@firma.cz,Engineer
+2703|Martin|Dvořák|anna.bílá@company.com|Engineer
+2203;Anna;Bílá;invalid-email;HR
+3905	Tomáš	Dvořák	tomáš.novák@seznam.cz	Intern
+3905;Tomáš;Dvořák;tomáš.novák@seznam.cz;Intern
+7008;Petr;Malá;karel.bílá@vendor.io;Intern;EXTRA_COLUMN_Kuvpw
+1232,Lucie,Procházka,no.domain@,HR
+5028|Eva|Procházka|anna.novák@company.com|Manager
+6850	Martin	Král	jana.procházka@vendor.io	Intern
+3001	Eva	Novák	jana.bílá@firma.cz	Manager
+5206	Anna	Malá	eva.dvořák@company.com	Engineer

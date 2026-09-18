@@ -1,0 +1,19 @@
+EmployeeID|FirstName|LastName|Email|Role
+8330,Jan,Procházka,martin.bílá@firma.cz,Manager,EXTRA_COLUMN_vTqhS
+1013|Petra||tomáš.dvořák@external.net|Engineer|EXTRA_COLUMN_XpFmZ
+1013,Petra,,tomáš.dvořák@external.net,Engineer,EXTRA_COLUMN_XpFmZ
+2521,Jana,Dvořák,jan.svoboda@external.net,Engineer
+1838;Martin;Král;karel.bílá@company.com;Manager
+7925|Jan|Svoboda|no.domain@|Vendor
+4593|Karel|Bílá|jana.král@seznam.cz|Manager|EXTRA_COLUMN_skKWl
+5650;Karel;Svoboda;eva.procházka@company.com;Manager
+6016	Anna	Němcová		Intern	EXTRA_COLUMN_tqgtZ
+1771,Anna,Král,petr.novák@seznam.cz,Intern
+3818,Tomáš,Procházka,jana.procházka@gmail.com,Engineer
+5547	Anna	Procházka	tomáš.procházka@external.net	HR
+5458|Lucie|Novák|lucie.němcová@vendor.io|Manager
+5417|
+2376;Tomáš;Dvořák;broken@domain;Engineer
+5847;Karel;Dvořák;karel.novák@gmail.com;HR
+4878	Tomáš	Svoboda	karel.dvořák@firma.cz	Manager
+8441,Jan,Procházka,petr.svoboda@firma.cz,Manager

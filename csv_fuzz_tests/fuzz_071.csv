@@ -1,0 +1,10 @@
+emp_id;fname;lname;email_address;dept
+5385;Jan;Svoboda;jana.procházka@external.net;Intern;EXTRA_COLUMN_YqdcF
+2734;Karel;Bílá;petra.novák@company.com;HR;EXTRA_COLUMN_fnKFX
+6568;Anna;Král;petr.svoboda@external.net;HR
+2012;Martin;Novák;invalid-email;Vendor
+8370;Anna;Král;anna.král@seznam.cz;Intern
+5174;Petr;Dvořák;eva.malá@gmail.com;Intern
+2146;Lucie;Bílá;martin.malá@firma.cz;HR
+2146;Lucie;Bílá;martin.malá@firma.cz;HR
+3564;Martin;Němcová;@missinguser.cz;Vendor

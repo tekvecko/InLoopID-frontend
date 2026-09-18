@@ -1,0 +1,15 @@
+ID;Name;Surname;Mail;Position
+8857;Jan;Novák;invalid-email;Engineer
+4586;Karel;Procházka;broken@domain;Engineer
+5188;Jan;Svoboda;martin.král@vendor.io;Engineer
+5188;Jan;Svoboda;martin.král@vendor.io;Engineer
+9252;Petr;Procházka;petra.procházka@firma.cz;HR
+9478;Anna;Král;jan.procházka@gmail.com;HR
+1753;Petr;Procházka;lucie.procházka@external.net;HR
+7736;Eva;Procházka;invalid-email;Intern
+8279;Jana;;user@firma;Engineer;EXTRA_COLUMN_VdKmV
+4496;Karel;Svoboda;eva.němcová@firma.cz;HR
+7277;Martin;Bílá;tomáš.novák@company.com;Vendor
+9457;Petra;Novák;anna.procházka@seznam.cz;HR;EXTRA_COLUMN_oDmvN
+6653;Tomáš;Němcová;karel.němcová@seznam.cz;Manager
+3079;Lucie;Dvořák;tomáš.malá@external.net;Intern

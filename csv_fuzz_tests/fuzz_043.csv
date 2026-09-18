@@ -1,0 +1,8 @@
+emp_id	fname	lname	email_address	dept
+4025	Anna	Dvořák	anna.dvořák@gmail.com	Manager
+6364	Jan	Němcová	lucie.svoboda@vendor.io	HR
+5913	Eva	Král	missing-at.com	Manager
+6140	Petra	Král	petr.malá@firma.cz	Intern
+6232	Anna	Malá	martin.malá@vendor.io	Engineer
+6232	Anna	Malá	martin.malá@vendor.io	Engineer
+1434	Jan	Král	missing-at.com	Engineer

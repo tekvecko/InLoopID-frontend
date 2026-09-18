@@ -1,0 +1,11 @@
+EmployeeID	FirstName	LastName	Email	Role
+2500	Jan
+7293	Eva	Bílá	jana.němcová@seznam.cz	Manager
+4855	Petr	Novák	jana.svoboda@seznam.cz	Intern
+9120	Eva	Král		Manager	EXTRA_COLUMN_bZLXt
+4568	Karel	Král	martin.svoboda@gmail.com	Intern
+6806	Jana	Dvořák	no.domain@	Engineer
+1694	Karel
+9156	Petra	Bílá	lucie.malá@vendor.io	Intern
+8752	Petra	Němcová	petr.novák@company.com	Vendor
+3008	Karel	Němcová	invalid-email	HR

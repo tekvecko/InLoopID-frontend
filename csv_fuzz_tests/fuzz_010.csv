@@ -1,0 +1,10 @@
+emp_id|fname|lname|email_address|dept
+1344|Anna|Malá|petra.procházka@seznam.cz|Manager
+8720|Tomáš|Dvořák|jan.bílá@gmail.com|Intern|EXTRA_COLUMN_HZPDH
+1933|Anna|Svoboda|tomáš.dvořák@vendor.io|Vendor|EXTRA_COLUMN_FbOmy
+4299|Petra|Svoboda|lucie.novák@seznam.cz|Vendor
+1824|Jana|Malá|eva.bílá@gmail.com|Intern
+1732|Anna|Dvořák|martin.dvořák@vendor.io|Manager
+2474|Anna|Němcová|anna.dvořák@external.net|Manager
+2474|Anna|Němcová|anna.dvořák@external.net|Manager
+5701|Jana|Bílá|invalid-email|Engineer

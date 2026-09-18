@@ -1,0 +1,15 @@
+EmployeeID	FirstName	LastName	Email	Role
+4422	Tomáš	Svoboda	@missinguser.cz	Engineer	EXTRA_COLUMN_uRvHo
+4954	Jan	Novák	anna.svoboda@external.net	Intern
+4954	Jan	Novák	anna.svoboda@external.net	Intern
+8850	Anna	Král	petr.němcová@gmail.com	HR
+1887	Jana	Novák	jana.novák@external.net	Manager
+9321	Tomáš	Procházka	tomáš.novák@company.com	Manager
+5009	Jan	Svoboda	tomáš.novák@external.net	Engineer
+6597	Karel	Malá	petr.král@external.net	Vendor
+3005	Petra	Procházka	anna.novák@company.com	Manager	EXTRA_COLUMN_YUbgP
+9264	Jana	Procházka	petra.novák@vendor.io	Vendor
+2738	Martin	Němcová	eva.bílá@company.com	HR
+1450	Anna	Král	eva.svoboda@vendor.io	HR
+9842	Tomáš	Dvořák	lucie.procházka@vendor.io	Intern	EXTRA_COLUMN_sujbk
+2000	Jana	Malá	tomáš.bílá@gmail.com	Engineer

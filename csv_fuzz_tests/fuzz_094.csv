@@ -1,0 +1,9 @@
+emp_id|fname|lname|email_address|dept
+9005|Martin|Malá|jan.dvořák@vendor.io|Engineer
+9648|Jan|Dvořák|eva.dvořák@external.net|Intern
+1810|Anna|Novák|karel.malá@company.com|HR
+7856|Lucie|Dvořák|missing-at.com|Engineer|EXTRA_COLUMN_XBezC
+6898|Jan|Král|no.domain@|Engineer
+1741|Jan|Dvořák|jan.svoboda@firma.cz|Manager
+7997|Tomáš|Procházka|jana.novák@company.com|HR
+5300|Jana|Novák|jana.malá@external.net|Engineer

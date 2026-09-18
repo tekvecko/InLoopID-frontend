@@ -1,0 +1,9 @@
+EmployeeID,FirstName,LastName,Email,Role
+1520,Lucie,Dvořák,lucie.procházka@gmail.com,Intern
+2288,Lucie,Král,@missinguser.cz,Vendor
+7172,Lucie,Němcová,karel.dvořák@company.com,Engineer
+3653,Martin,Němcová,eva.novák@company.com,HR
+8696,Martin,Malá,invalid-email,Manager,EXTRA_COLUMN_ffKAP
+6724,Petra,Procházka,broken@domain,Manager
+1190,Jana,Bílá,jana.bílá@vendor.io,HR,EXTRA_COLUMN_CzkUH
+9017,Anna,Malá,anna.dvořák@company.com,Manager

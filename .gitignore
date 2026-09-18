@@ -1,0 +1,25 @@
+# Prostředí a tajemství
+.env
+.env.*
+!.env.example
+
+# Databáze
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+
+# Node.js / React
+node_modules/
+dist/
+build/
+npm-debug.log*
+
+# Operační systém a logy
+.DS_Store
+*.log

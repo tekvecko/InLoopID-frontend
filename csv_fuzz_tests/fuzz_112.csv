@@ -1,0 +1,18 @@
+ID|Name|Surname|Mail|Position
+3548,Jana,Král,user@firma,Vendor,EXTRA_COLUMN_HjShn
+7874,Karel,Svoboda,tomáš.svoboda@seznam.cz,HR
+5285,Martin
+5209;Karel;Novák;anna.novák@firma.cz;Intern
+6018,Petr,Novák,petr.malá@company.com,Vendor
+7120	Petra	Bílá	user@firma	Vendor
+1671	Lucie	Bílá	tomáš.král@external.net	Manager
+1671,Lucie,Bílá,tomáš.král@external.net,Manager
+4278,Jan,Malá,lucie.bílá@vendor.io,Engineer
+5084;Tomáš;Svoboda;petra.svoboda@external.net;Engineer
+5084,Tomáš,Svoboda,petra.svoboda@external.net,Engineer
+2949;Lucie;Bílá;karel.němcová@vendor.io;Intern
+1327;Lucie;Němcová;anna.svoboda@external.net;Intern
+2307|Tomáš|Procházka|martin.bílá@seznam.cz|HR
+6183|Eva|Procházka|martin.němcová@company.com|Manager
+,Eva,Malá,tomáš.svoboda@vendor.io,Engineer,EXTRA_COLUMN_HcCld
+3318	Tomáš	Malá	@missinguser.cz	HR

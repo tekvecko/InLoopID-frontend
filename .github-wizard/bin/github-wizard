@@ -1,0 +1,61 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+set -euo pipefail
+
+ROOT="$(pwd)"
+GW="$ROOT/.github-wizard"
+R="$GW/reports"
+X="$GW/export"
+
+mkdir -p "$R" "$X"
+
+log(){ echo "[github-wizard] $(date '+%F %T') $*"; }
+
+safe_find(){ find . 2>/dev/null || true; }
+
+scan(){
+log "scan start"
+mkdir -p "$R/scan"
+safe_find -type f > "$R/scan/files.txt"
+safe_find -type d > "$R/scan/dirs.txt"
+
+safe_find -type f -name "*.json" > "$R/scan/json.txt"
+safe_find -type f -name "*.csv" > "$R/scan/csv.txt"
+
+if safe_find -name package.json | grep -q .; then
+echo "Node.js" > "$R/scan/stack.txt"
+fi
+
+if safe_find -name requirements.txt | grep -q .; then
+echo "Python" >> "$R/scan/stack.txt"
+fi
+
+log "scan done"
+}
+
+audit(){
+log "audit start"
+mkdir -p "$R/audit"
+
+grep -RniE "(secret|token|password|apikey|api_key)" . 2>/dev/null > "$R/audit/secrets.txt" || true
+
+log "audit done"
+}
+
+gdpr(){
+log "gdpr start"
+mkdir -p "$R/gdpr"
+
+grep -RniE "(email|phone|rodne|birth)" . 2>/dev/null > "$R/gdpr/data.txt" || true
+
+log "gdpr done"
+}
+
+architecture(){
+log "architecture"
+mkdir -p "$X/architecture"
+
+cat > "$X/architecture/system.md" <<EOF
+# Architecture
+
+Scan → Audit → GDPR → Export

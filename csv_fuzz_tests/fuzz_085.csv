@@ -1,0 +1,4 @@
+EmployeeID,FirstName,LastName,Email,Role
+3702,Tomáš,Svoboda,missing-at.com,Intern
+2004,Jan,Bílá,tomáš.procházka@external.net,Manager
+9992,Anna,Novák,missing-at.com,Engineer

@@ -1,0 +1,6 @@
+EmployeeID;FirstName;LastName;Email;Role
+1212;Petr;Malá;jan.procházka@gmail.com;Engineer
+3944;Jan;Novák;tomáš.němcová@seznam.cz;Engineer
+6273;Petr;Svoboda;martin.bílá@company.com;Manager
+3593;Anna;Bílá;invalid-email;HR;EXTRA_COLUMN_yViiD
+8791;Jana;Král;lucie.procházka@seznam.cz;Vendor

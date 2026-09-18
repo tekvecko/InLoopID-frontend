@@ -1,0 +1,26 @@
+site_name: InLoopID Enterprise Documentation
+
+theme:
+
+  name: material
+
+docs_dir: docs
+
+plugins:
+
+  - search
+
+markdown_extensions:
+
+  - admonition
+
+  - tables
+
+  - toc
+
+nav:
+
+  - Home: index.md
+
+  - Documentation: SUMMARY.md
+

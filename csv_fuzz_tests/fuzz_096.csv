@@ -1,0 +1,13 @@
+emp_id|fname|lname|email_address|dept
+6899|Tomáš
+3704|Lucie|Král|martin.král@external.net|Vendor|EXTRA_COLUMN_BPLlg
+5386|Eva|Procházka|@missinguser.cz|Vendor
+9143|Petra|Procházka|@missinguser.cz|Intern|EXTRA_COLUMN_IxnlT
+7529|Martin|Svoboda|invalid-email|Manager
+6715|Anna|Němcová|anna.němcová@gmail.com|Intern
+2983|Karel|Svoboda|eva.němcová@company.com|Intern
+2461|Jan|Malá|anna.dvořák@vendor.io|Intern
+9497|Martin|Novák|invalid-email|Manager
+4592|Anna
+9852|Tomáš|Malá|karel.dvořák@vendor.io|Intern
+7024|Anna

@@ -1,0 +1,28 @@
+EmployeeID	FirstName	LastName	Email	Role
+6088|Petr|Bílá|invalid-email|Vendor
+2503	Martin	Svoboda	petra.malá@company.com	Vendor
+2751|Karel
+4204;Jan;Novák;petra.bílá@seznam.cz;HR
+9297,Anna,Němcová,broken@domain,HR
+6950|Eva|Novák|lucie.procházka@firma.cz|Engineer
+9419|Jana|Procházka|petra.dvořák@vendor.io|Vendor
+4900|Lucie|Procházka|tomáš.malá@vendor.io|Intern
+,Petr,Němcová,@missinguser.cz,HR,EXTRA_COLUMN_vgcBv
+9674|Jana
+7764|Jan|Novák|broken@domain|HR
+7764;Jan;Novák;broken@domain;HR
+6211	Jana	Novák	petr.němcová@firma.cz	HR
+6211|Jana|Novák|petr.němcová@firma.cz|HR
+9127	Petr	Malá	karel.němcová@company.com	Manager
+8237;Lucie;Král;missing-at.com;Engineer
+5271,Petra,Bílá,anna.dvořák@vendor.io,Intern
+6232;Eva;Bílá;eva.král@firma.cz;Engineer;EXTRA_COLUMN_THvVi
+1533|Petr|Bílá|user@firma|HR
+1702;Petra;Bílá;eva.novák@vendor.io;HR
+1702	Petra	Bílá	eva.novák@vendor.io	HR
+2744;Karel;Malá;karel.procházka@firma.cz;Engineer
+6930;Karel;Malá;jan.bílá@company.com;HR
+3414|Karel|Dvořák|petr.dvořák@seznam.cz|Vendor
+7164|Petra|Král|jan.král@external.net|Intern
+7164;Petra;Král;jan.král@external.net;Intern
+3966||Bílá|karel.procházka@vendor.io|Intern|EXTRA_COLUMN_kHuih

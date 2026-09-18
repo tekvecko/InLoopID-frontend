@@ -1,0 +1,19 @@
+emp_id|fname|lname|email_address|dept
+8639;Petr;Bílá;martin.němcová@external.net;Engineer
+3227	Karel	Procházka	lucie.král@vendor.io		EXTRA_COLUMN_VWPqo
+4136;Anna;Malá;eva.malá@firma.cz;Engineer
+1991;Jan;Svoboda;jana.bílá@vendor.io;Manager
+1991	Jan	Svoboda	jana.bílá@vendor.io	Manager
+3172;Jana;Dvořák;jan.novák@firma.cz;Engineer
+3973|Lucie|Král|lucie.novák@firma.cz|HR
+2235	Tomáš	Svoboda	jan.procházka@external.net	Engineer
+2433,Martin,Král,petra.procházka@gmail.com,Manager
+5650,Martin,Procházka,anna.procházka@firma.cz,Intern
+5650|Martin|Procházka|anna.procházka@firma.cz|Intern
+6674,Tomáš,Malá,jan.novák@gmail.com,HR
+6674;Tomáš;Malá;jan.novák@gmail.com;HR
+4292	Jana	Novák	eva.procházka@gmail.com	Engineer
+7047;Tomáš;Malá;petra.bílá@external.net;Vendor
+9107,Petra,Novák,jan.novák@company.com,Manager
+4884	Martin	Procházka	tomáš.bílá@seznam.cz	Vendor
+3435|Jan|Král|jana.novák@vendor.io|Manager

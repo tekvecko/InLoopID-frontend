@@ -1,0 +1,12 @@
+emp_id;fname;lname;email_address;dept
+4281;Tomáš;Němcová;jana.novák@vendor.io;Vendor
+9991;Eva;Němcová;petr.svoboda@external.net;Engineer
+4300;Tomáš;Dvořák;martin.svoboda@external.net;Engineer
+6537;Anna;Svoboda;jana.svoboda@firma.cz;Manager
+4469;Petr;Procházka;karel.novák@firma.cz;Intern
+7864;Tomáš;Král;martin.malá@company.com;Vendor
+7504;Lucie;Němcová;jan.procházka@gmail.com;HR
+6930;Jana;Malá;anna.bílá@seznam.cz;Vendor
+7138;Tomáš;Král;jana.němcová@seznam.cz;Manager
+3557;Petr;Procházka;karel.bílá@company.com;Manager
+8801;Anna;Dvořák;jana.svoboda@firma.cz;HR

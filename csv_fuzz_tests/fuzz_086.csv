@@ -1,0 +1,17 @@
+A;B;C;D
+5052;Petr;Král;anna.král@external.net;HR
+6541;Eva;Dvořák;petr.svoboda@company.com;Manager;EXTRA_COLUMN_VOgdc
+1675;Eva;Malá;jan.němcová@seznam.cz;Engineer
+3081;Karel;Král;anna.dvořák@firma.cz;Intern;EXTRA_COLUMN_IZjWi
+2104;Karel;Bílá;invalid-email;Intern
+1524;Anna;Dvořák;@missinguser.cz;Engineer
+4202;Eva;Procházka;lucie.malá@firma.cz;Manager
+2490;Karel;Němcová;anna.král@external.net;Engineer
+2933;Anna;Král;petr.dvořák@company.com;Vendor
+9423;Petr;Němcová;anna.král@vendor.io;Vendor
+6719;Anna;Procházka;petra.malá@gmail.com;Vendor
+6394;Jan;Procházka;petr.procházka@vendor.io;HR
+3701;Eva;Němcová;tomáš.bílá@gmail.com;HR
+7579;Martin;Král;jana.němcová@company.com;Intern;EXTRA_COLUMN_wNtQs
+2792;Petr;Malá;karel.procházka@vendor.io;Intern
+5238;Anna;Král;jan.procházka@gmail.com;Manager

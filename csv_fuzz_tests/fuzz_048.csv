@@ -1,0 +1,17 @@
+ID	Name	Surname	Mail	Position
+5819	Anna	Dvořák	lucie.procházka@firma.cz	Engineer
+5819|Anna|Dvořák|lucie.procházka@firma.cz|Engineer
+6569,Petr,Malá,tomáš.procházka@gmail.com,HR
+4506;Petra;Němcová;petr.novák@gmail.com;HR
+7909;Tomáš;Dvořák;martin.dvořák@firma.cz;Engineer
+8257|Martin|Novák|jana.bílá@vendor.io|Vendor
+3624|Karel|Dvořák|jana.bílá@firma.cz|HR
+4775;Petra;Malá;petr.procházka@company.com;Vendor
+8138,Anna,Bílá,tomáš.dvořák@vendor.io,HR
+4909,Jana,Němcová,user@firma,,EXTRA_COLUMN_cwJaF
+4917,Anna,Novák,tomáš.bílá@vendor.io,Vendor
+4917;Anna;Novák;tomáš.bílá@vendor.io;Vendor
+7143	Lucie	Procházka	petr.malá@external.net	Intern
+7143,Lucie,Procházka,petr.malá@external.net,Intern
+4856;Anna;Novák;broken@domain;Vendor
+4856,Anna,Novák,broken@domain,Vendor

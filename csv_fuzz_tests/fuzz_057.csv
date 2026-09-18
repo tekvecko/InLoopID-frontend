@@ -1,0 +1,12 @@
+EmployeeID,FirstName,LastName,Email,Role
+8858,Eva,Král,martin.novák@external.net,Vendor
+7612,Martin,Bílá,jana.svoboda@firma.cz,Intern
+2440,Petra
+7601,Lucie,Novák,karel.procházka@vendor.io,Vendor
+1917,Lucie,Bílá,petr.malá@company.com,Intern,EXTRA_COLUMN_dgYCr
+7409,Jan,Novák,eva.král@external.net,Engineer
+4815,Anna,Dvořák,petra.novák@vendor.io,Manager
+3061,Petra,Král,petra.dvořák@vendor.io,HR,
+7103,Petr,Král,lucie.svoboda@vendor.io,HR
+2661,Jan,Bílá,martin.malá@vendor.io,HR
+8532,Petr,Svoboda,jan.novák@firma.cz,Manager

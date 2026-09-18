@@ -1,0 +1,14 @@
+EmployeeID	FirstName	LastName	Email	Role
+7605	Anna	Král	anna.procházka@seznam.cz	Manager
+1346	Jana	Němcová	broken@domain	Engineer
+6033	Karel	Svoboda	petr.svoboda@vendor.io	Vendor	EXTRA_COLUMN_cGBMy
+8488	Eva	Dvořák	martin.svoboda@vendor.io	Intern
+9487	Jana	Král	petra.novák@firma.cz	Intern
+3617	Jana	Svoboda	karel.němcová@company.com	Vendor
+2507	
+9677	Lucie	Král	invalid-email	Manager
+9452	Lucie	Bílá	karel.král@firma.cz	Engineer
+3212	Martin	Bílá	petra.procházka@company.com	Vendor
+7365	Jan
+7542	Lucie	Bílá	jana.malá@external.net	Manager
+8371	Jan	Bílá	jan.němcová@gmail.com	Vendor

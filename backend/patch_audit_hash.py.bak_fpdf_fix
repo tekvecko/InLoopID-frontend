@@ -1,0 +1,30 @@
+import os
+
+file_path = "/data/data/com.termux/files/home/InloopID/backend/routes.py"
+
+with open(file_path, 'r') as f:
+    content = f.read()
+
+old_loop = """    for cred in credentials:
+        hash_short = f"{cred.content_hash[:20]}..." if cred.content_hash else "HASH_PENDING"
+        pdf.cell(0, 5, f"ID: {cred.credential_id} | DID: {cred.subject_did}", ln=True)
+        pdf.cell(0, 5, f"    STATUS: {cred.status.upper()} | HASH: {hash_short}", ln=True)
+        pdf.ln(2)"""
+
+new_loop = """    for cred in credentials:
+        hash_val = cred.content_hash if cred.content_hash else "HASH_PENDING"
+        pdf.set_font("Roboto", "B", 8)
+        pdf.cell(0, 5, f"ID: {cred.credential_id} | STATUS: {cred.status.upper()}", ln=True)
+        pdf.set_font("Roboto", "", 8)
+        pdf.multi_cell(0, 5, f"DID: {cred.subject_did}")
+        pdf.multi_cell(0, 5, f"HASH: {hash_val}")
+        pdf.ln(3)"""
+
+if old_loop in content:
+    content = content.replace(old_loop, new_loop)
+    with open(file_path, 'w') as f:
+        f.write(content)
+    print("[+] Generátor PDF upraven. Hashe a DID se nyní budou zalamovat a zobrazí se celé.")
+else:
+    print("[-] Smyčka nenalezena, zkontroluj stav souboru.")
+

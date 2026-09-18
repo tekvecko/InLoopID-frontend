@@ -1,0 +1,27 @@
+A,B,C,D
+8263,Petr,Dvořák,no.domain@,Engineer
+1632	Anna	Bílá	tomáš.král@seznam.cz	Engineer	EXTRA_COLUMN_nHKhZ
+1632|Anna|Bílá|tomáš.král@seznam.cz|Engineer|EXTRA_COLUMN_nHKhZ
+8667|Anna|Procházka|petr.svoboda@gmail.com|HR
+6881,Lucie,Svoboda,eva.novák@vendor.io,Intern
+1054;Petr;Malá;eva.malá@company.com;HR
+3644	Tomáš	Král	lucie.král@gmail.com	HR
+9172,Jan,Malá,petra.svoboda@seznam.cz,Manager,
+7342	Karel	Král	petra.král@firma.cz	Intern
+8678	Petr	Svoboda	petr.král@vendor.io	Engineer
+4601	Eva	Novák	invalid-email	HR
+3737|Eva|Němcová|jan.svoboda@gmail.com|Engineer
+4502;Lucie;Bílá;karel.král@gmail.com;Engineer
+4502,Lucie,Bílá,karel.král@gmail.com,Engineer
+9781;Anna;Procházka;missing-at.com;Intern
+3766,Petr
+9517;Eva
+8482	Jan	Král	anna.dvořák@seznam.cz	HR
+9723|Anna|Novák|karel.malá@external.net|Manager|EXTRA_COLUMN_ANcWr
+9903,Karel,Svoboda,eva.dvořák@seznam.cz,Manager
+8842;Martin;Malá;tomáš.dvořák@company.com;Intern
+1464|Jan|Procházka|no.domain@|Vendor
+5203;Jana;Malá;broken@domain;Vendor
+7460|Jana|Malá|missing-at.com|Intern
+5075;Tomáš;Dvořák;@missinguser.cz;Engineer
+4796;Karel;Dvořák;jana.svoboda@external.net;Manager

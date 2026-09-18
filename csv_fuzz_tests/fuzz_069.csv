@@ -1,0 +1,30 @@
+ID,Name,Surname,Mail,Position
+7373;Jana;Malá;invalid-email;Manager
+3493	Martin	Bílá	jana.malá@gmail.com	Engineer	
+3315	Martin	Procházka	lucie.bílá@external.net	Engineer
+1689,Petr,Malá,jana.bílá@gmail.com,HR
+7289	Petra	Novák	petr.novák@seznam.cz	Manager
+1905	
+2212	Tomáš		eva.novák@external.net	Vendor	EXTRA_COLUMN_hYbHr
+4767,Karel,Malá,lucie.malá@gmail.com,Manager
+3467;Anna;Svoboda;missing-at.com;Intern
+6968,Lucie,Němcová,jana.král@vendor.io,HR,EXTRA_COLUMN_hjPVw
+2505|Martin|Dvořák|lucie.král@gmail.com|Engineer|EXTRA_COLUMN_dInPh
+9141|Lucie
+9141|Lucie
+2273	Martin	Němcová	martin.svoboda@gmail.com	Manager	EXTRA_COLUMN_kSajw
+4397|Eva|Dvořák|jan.novák@firma.cz|Engineer
+3230|Jana|Malá|eva.svoboda@gmail.com|Vendor
+5512	Karel	Procházka	@missinguser.cz	Manager
+5512	Karel	Procházka	@missinguser.cz	Manager
+6661	Eva	Procházka	petr.malá@seznam.cz	Engineer
+5647	Petra	Bílá	jan.dvořák@firma.cz	Intern	EXTRA_COLUMN_BQgGR
+6524,Martin,Procházka,karel.bílá@seznam.cz,Intern
+1221	Anna	Svoboda	petra.malá@external.net	Manager
+1221|Anna|Svoboda|petra.malá@external.net|Manager
+3574	Martin	Malá	lucie.novák@vendor.io	Engineer
+9785,Petr,Král,jan.malá@company.com,Vendor
+9805;Petra;Dvořák;jana.král@seznam.cz;Vendor
+9805,Petra,Dvořák,jana.král@seznam.cz,Vendor
+5722,Anna,Procházka,petr.dvořák@seznam.cz,Engineer
+3952;Jana;Procházka;karel.němcová@vendor.io;Manager

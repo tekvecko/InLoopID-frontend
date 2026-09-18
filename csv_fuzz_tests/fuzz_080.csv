@@ -1,0 +1,16 @@
+EmployeeID;FirstName;LastName;Email;Role
+8348;Eva;Král;tomáš.svoboda@external.net;;EXTRA_COLUMN_Opyex
+8348;Eva;Král;tomáš.svoboda@external.net;;EXTRA_COLUMN_Opyex
+6390;Petr;Bílá;anna.král@company.com;Manager
+7398;Anna;Bílá;petra.procházka@company.com;Engineer
+3542;Jan;;tomáš.novák@external.net;Manager;EXTRA_COLUMN_VEUiQ
+6299;Tomáš;Svoboda;martin.němcová@external.net;Vendor
+3922;Martin;Novák;lucie.svoboda@firma.cz;Manager
+7197;Lucie;Procházka;tomáš.malá@gmail.com;Manager
+8182;Eva;Novák;petr.král@company.com;Intern
+8427;Jana;Král;tomáš.procházka@company.com;Intern
+8427;Jana;Král;tomáš.procházka@company.com;Intern
+1625;Jan;Novák;petr.procházka@company.com;HR
+1600;Petra;Malá;invalid-email;Manager
+6674;Eva;Bílá;karel.procházka@firma.cz;HR
+6674;Eva;Bílá;karel.procházka@firma.cz;HR

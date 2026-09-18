@@ -1,0 +1,16 @@
+EmployeeID;FirstName;LastName;Email;Role
+8321;Jana;Král;petr.bílá@firma.cz;HR
+8286;Tomáš;Bílá;petr.svoboda@gmail.com;Manager
+4237;Lucie;Procházka;tomáš.malá@company.com;HR
+3496;Tomáš;Procházka;petr.procházka@firma.cz;HR
+6616;Jana;Král;jana.dvořák@seznam.cz;HR
+1577;Petra;Bílá;martin.novák@company.com;HR
+8258;Jan;Malá;martin.král@company.com;Intern
+8933;Tomáš;Němcová;tomáš.král@external.net;Vendor
+8084;Tomáš;Procházka;anna.novák@external.net;HR
+4643;Anna;Němcová;martin.dvořák@external.net;Vendor;EXTRA_COLUMN_dzJbc
+2660;Anna;Němcová;anna.malá@firma.cz;HR
+7048;Petra;Král;user@firma;Vendor;EXTRA_COLUMN_otTmv
+6552;Petra;Svoboda;martin.král@firma.cz;Manager
+4113;Eva;Malá;jana.král@firma.cz;Engineer;EXTRA_COLUMN_ZBhJB
+4229;Anna;Bílá;karel.novák@firma.cz;HR

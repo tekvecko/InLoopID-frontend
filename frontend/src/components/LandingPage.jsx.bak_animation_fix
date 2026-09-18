@@ -1,0 +1,641 @@
+import { B2BRegistrationModal } from './B2BRegistrationModal';
+import { B2BArgumentationMatrix } from './B2BArgumentationMatrix';
+import { GlobalCryptoOverlay } from './GlobalCryptoOverlay';
+import { HRDecryptionVault } from './HRDecryptionVault';
+import { ComplianceDashboard } from './ComplianceDashboard';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, Lock, Database, Award, Search, FileText, Loader2, TrendingDown, AlertOctagon, Zap, ArrowRight, Clock3, AlertTriangle, ChevronLeft, ChevronRight, FilePlus, Fingerprint, PenTool, Menu, X, User, CheckCircle, Activity, Scale, Key, Unlock, Eye, Download, Shield, Server, KeyRound } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const FinancialMetrics = () => {
+  const [employees, setEmployees] = useState(150);
+  const hoursSaved = Math.round(employees * 3.5);
+  const costSaved = Math.round(employees * 650);
+  const riskMitigated = employees > 200 ? 1000000 : (employees > 50 ? 500000 : 100000);
+
+  return (
+    <section className="py-20 px-6 bg-[#0A101D] border-t border-blue-900/30">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">Kvantifikace provozních úspor</h2>
+          <p className="text-slate-400 font-medium">Zjistěte, kolik InLoopID ušetří vaší společnosti v prvním roce nasazení.</p>
+        </div>
+        
+        <div className="mb-12 max-w-2xl mx-auto bg-[#111A3A] p-8 rounded-3xl border border-blue-900/50">
+          <div className="flex justify-between items-end mb-4">
+            <label className="font-bold text-slate-400 uppercase tracking-wider text-sm">Velikost podniku</label>
+            <span className="text-3xl font-black text-blue-400">{employees} <span className="text-lg text-slate-500 font-medium">zaměstnanců</span></span>
+          </div>
+          <input type="range" min="10" max="1000" step="10" value={employees} onChange={(e) => setEmployees(Number(e.target.value))} className="w-full h-2 bg-blue-900/50 rounded-lg appearance-none cursor-pointer accent-blue-500"/>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="p-8 rounded-3xl bg-[#111A3A] border border-blue-900/50 text-center">
+            <Clock3 className="mx-auto text-blue-500 mb-4" size={32}/>
+            <div className="text-4xl font-black text-white mb-2">{hoursSaved} h</div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ušetřený čas HR / rok</div>
+          </div>
+          <div className="p-8 rounded-3xl bg-[#111A3A] border border-emerald-900/50 text-center">
+            <TrendingDown className="mx-auto text-emerald-500 mb-4" size={32}/>
+            <div className="text-4xl font-black text-white mb-2">{costSaved.toLocaleString('cs-CZ')} Kč</div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Přímé materiální úspory</div>
+          </div>
+          <div className="p-8 rounded-3xl bg-[#111A3A] border border-amber-900/50 text-center">
+            <AlertOctagon className="mx-auto text-amber-500 mb-4" size={32}/>
+            <div className="text-4xl font-black text-white mb-2">Až {riskMitigated.toLocaleString('cs-CZ')} Kč</div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Eliminované pokuty (OIP)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const PitchDeck = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = [
+    { title: "Standard absolutní důvěry", subtitle: "Enterprise řešení pro HR", icon: <ShieldCheck size={80} className="text-blue-500" />, content: "Zabezpečená infrastruktura pro digitalizaci pracovněprávních procesů bez ztráty kontroly nad citlivými údaji." },
+    { title: "Rizika tradičního cloudu", subtitle: "Ztráta datové suverenity", icon: <AlertTriangle size={80} className="text-rose-500" />, content: "Běžné systémy vyžadují odeslání dat na servery třetích stran v čitelné podobě, což představuje neakceptovatelné právní riziko a vystavuje vás Vendor Lock-inu." },
+    { title: "Matematická garance", subtitle: "Zero-Knowledge Architektura", icon: <Database size={80} className="text-emerald-500" />, content: "Naše bezpečnost nestojí na smluvních slibech. Je fyzikálně vynucena nedostupností dešifrovacích klíčů na straně provozovatele platformy." }
+  ];
+  return (
+    <section className="py-20 px-6 bg-[#0B1120]">
+      <div className="w-full max-w-5xl mx-auto bg-[#111A3A] border border-blue-900/50 rounded-[2.5rem] overflow-hidden shadow-2xl transition-transform origin-center">
+        <div className="flex flex-col md:flex-row items-center min-h-[350px]">
+          <div className="md:w-1/3 flex justify-center p-12 bg-[#0A101D] border-r border-blue-900/30 h-full">{slides[currentSlide].icon}</div>
+          <div className="md:w-2/3 p-12">
+            <h2 className="text-3xl font-extrabold text-white mb-2">{slides[currentSlide].title}</h2>
+            <h3 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-6">{slides[currentSlide].subtitle}</h3>
+            <p className="text-lg text-slate-300 leading-relaxed">{slides[currentSlide].content}</p>
+          </div>
+        </div>
+        <div className="bg-[#0A101D] p-6 flex justify-between items-center border-t border-blue-900/30">
+          <button onClick={() => setCurrentSlide(p => Math.max(0, p-1))} disabled={currentSlide === 0} className="flex items-center gap-2 font-bold text-slate-400 hover:text-blue-400 disabled:opacity-30 transition-colors"><ChevronLeft size={20}/> Předchozí</button>
+          <div className="flex gap-2">{slides.map((_, i) => <div key={i} className={`w-2 h-2 rounded-full ${currentSlide === i ? 'bg-blue-500' : 'bg-slate-600'}`}/>)}</div>
+          <button onClick={() => setCurrentSlide(p => Math.min(slides.length-1, p+1))} disabled={currentSlide === slides.length - 1} className="flex items-center gap-2 font-bold text-slate-400 hover:text-blue-400 disabled:opacity-30 transition-colors">Další <ChevronRight size={20}/></button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ProcessVisualization = () => {
+  const steps = [
+    { icon: <FilePlus size={24}/>, title: "Generování Smart Smlouvy", desc: "Automatické mapování dat na certifikované šablony s validací Zákoníku práce." },
+    { icon: <Lock size={24}/>, title: "Lokální AES-256 Šifrování", desc: "Data jsou na zařízení nevratně zašifrována. Server přijímá pouze matematický šum." },
+    { icon: <Fingerprint size={28}/>, title: "Ověření e-identitou občanem", desc: "Uchazeč prokazuje svou totožnost státem garantovaným standardem (MojeID).", highlight: true },
+    { icon: <PenTool size={24}/>, title: "Kryptografický podpis stran", desc: "Autorizace elektronického dokumentu zaměstnancem i zaměstnavatelem." },
+    { icon: <Award size={24}/>, title: "Kvalifikovaná eIDAS Pečeť", desc: "Zafixování dokumentu časovým razítkem autority pro absolutní právní vymahatelnost." }
+  ];
+  return (
+    <section className="py-24 px-6 relative z-10 bg-[#0A101D] border-t border-blue-900/30">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">Architektura procesu</div>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">Transparentní Pipeline</h2>
+        </div>
+        <div className="relative">
+          <div className="absolute left-8 md:left-1/2 top-8 bottom-8 w-1 bg-blue-900/30 transform md:-translate-x-1/2 rounded-full"/>
+          <div className="space-y-12">
+            {steps.map((step, idx) => (
+              <div key={idx} className={`relative flex flex-col md:flex-row items-start md:items-center ${idx % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                <div className={`absolute left-8 md:left-1/2 w-16 h-16 rounded-full flex items-center justify-center transform -translate-x-1/2 md:-translate-x-1/2 z-10 shadow-lg transition-transform hover:scale-110 ${step.highlight ? 'bg-[#111A3A] ring-4 ring-blue-500/20 border-2 border-blue-500 text-blue-400' : 'bg-[#0B1120] border-2 border-blue-900/50 text-slate-400'}`}>{step.icon}</div>
+                <div className={`ml-24 md:ml-0 md:w-1/2 ${idx % 2 === 0 ? 'md:pl-20' : 'md:pr-20 text-left md:text-right'}`}>
+                  <div className={`bg-[#111A3A] border p-8 rounded-[2rem] transition-all hover:-translate-y-1 ${step.highlight ? 'border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.15)]' : 'border-blue-900/30 shadow-sm'}`}>
+                    <div className={`text-[10px] font-black uppercase tracking-widest mb-3 ${step.highlight ? 'text-blue-400' : 'text-slate-500'}`}>Fáze 0{idx + 1}</div>
+                    <h3 className="text-2xl font-bold text-white mb-3">{step.title}</h3><p className="text-slate-400">{step.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const InteractiveDemo = () => {
+  const [unlocked, setUnlocked] = useState(localStorage.getItem('inloopid_demo_unlocked') === 'true');
+  const [gateEmail, setGateEmail] = useState('');
+  const [gateStatus, setGateStatus] = useState('');
+  
+  // Řízení fází dema (1 až 6)
+  const [demoPhase, setDemoPhase] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Data formuláře (HR)
+  const [candidateEmail, setCandidateEmail] = useState('');
+  const [position, setPosition] = useState('Senior Cloud Architekt');
+  const [salary, setSalary] = useState('120 000');
+  
+  // Data z MojeID (Uchazeč)
+  const [mojeIdData, setMojeIdData] = useState(null);
+  
+  // Kryptografické stavy
+  const [cipherText, setCipherText] = useState('');
+  const [signature, setSignature] = useState('');
+
+  // Stavy pro Fázi 5 (Audit) a 6 (Kapsle)
+  const [auditLog, setAuditLog] = useState(null);
+  const [shamirKeys, setShamirKeys] = useState([]);
+  const [isRecovered, setIsRecovered] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('demo_token')) {
+      localStorage.setItem('inloopid_demo_unlocked', 'true');
+      setUnlocked(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => document.getElementById('inloopid-demo')?.scrollIntoView({behavior: 'smooth'}), 500);
+    }
+  }, []);
+
+  const requestAccess = async () => {
+    if (!gateEmail.includes('@')) return alert('Zadejte platný e-mail.');
+    setGateStatus('Odesílám přístupový odkaz...');
+    try {
+      const res = await fetch('/api/v1/demo/request-access', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: gateEmail}) });
+      const data = await res.json();
+      if (data.fallback) {
+        setGateStatus(`Vývojový režim. Přihlašuji...`);
+        setTimeout(() => { localStorage.setItem('inloopid_demo_unlocked', 'true'); setUnlocked(true); }, 1000);
+      } else { setGateStatus('Odkaz odeslán. Zkontrolujte e-mail.'); }
+    } catch (e) { setGateStatus('Chyba komunikace se serverem.'); }
+  };
+
+  const handleCVUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsProcessing(true);
+    const formData = new FormData(); formData.append('cv', file);
+    try {
+      const res = await fetch('/api/v1/demo/extract-cv', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.email) setCandidateEmail(data.email);
+      else alert('V dokumentu se nepodařilo najít e-mail.');
+    } catch (err) { console.error(err); }
+    setIsProcessing(false);
+  };
+
+  const handleEncrypt = () => {
+    if (!candidateEmail) return alert('Chybí soukromý e-mail uchazeče.');
+    setIsProcessing(true);
+    setTimeout(() => {
+      setCipherText("U2FsdGVkX19" + Math.random().toString(36).substring(2) + btoa(candidateEmail + position).substring(0, 30) + "Tz9xP==");
+      setDemoPhase(2);
+      setIsProcessing(false);
+    }, 1200);
+  };
+
+  const handleMojeIdAuth = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      setMojeIdData({ name: 'Ing. Karel Novotný', birthDate: '15. 4. 1985', address: 'Technologická 15, 602 00 Brno', identifier: '850415/1234' });
+      setIsProcessing(false);
+    }, 1500);
+  };
+
+  const handleSign = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      setSignature("30450220" + Math.random().toString(16).substring(2) + "a8f9[ECDSA-P256]");
+      setDemoPhase(4); // Rovnou přepne na Radar HR
+      setIsProcessing(false);
+    }, 1500);
+  };
+
+  // Generování PDF (Použito v Radaru)
+  const printPDF = () => {
+    if (!window.pdfMake || !window.pdfMake.vfs) { alert("Inicializuji PDF tiskárnu. Zkuste to prosím za vteřinu znovu."); return; }
+    const empName = mojeIdData?.name || 'Neznámý';
+    const empBirth = mojeIdData?.birthDate || 'Neznámé';
+    const empAddress = mojeIdData?.address || 'Neznámá';
+
+    const docDef = {
+      content: [
+        { text: 'PRACOVNÍ SMLOUVA', style: 'header', alignment: 'center', margin: [0, 0, 0, 10] },
+        { text: 'uzavřená dle ustanovení § 34 a násl. zákona č. 262/2006 Sb., zákoník práce', alignment: 'center', fontSize: 10, margin: [0, 0, 0, 25] },
+        { text: 'I. Smluvní strany', bold: true, margin: [0, 10, 0, 10], fontSize: 14 },
+        { text: 'Zaměstnavatel:', bold: true, fontSize: 11 },
+        { text: 'InLoop Corp, a.s.\nSídlo: Technologický park 1, 602 00 Brno\nIČO: 25874136', margin: [0, 2, 0, 10], fontSize: 11 },
+        { text: 'a', alignment: 'center', margin: [0, 5, 0, 5], fontSize: 11 },
+        { text: 'Zaměstnanec:', bold: true, fontSize: 11 },
+        { text: `${empName}\nDatum narození: ${empBirth}\nBydliště: ${empAddress}\nE-mail: ${candidateEmail}`, margin: [0, 2, 0, 20], fontSize: 11 },
+        { text: 'II. Druh práce a místo výkonu', bold: true, margin: [0, 10, 0, 10], fontSize: 14 },
+        { text: `1. Zaměstnanec se zavazuje pro zaměstnavatele vykonávat práci druhu: ${position}.`, margin: [0, 0, 0, 5], fontSize: 11 },
+        { text: '2. Místem výkonu práce je sjednáno sídlo zaměstnavatele a režim Home Office.', margin: [0, 0, 0, 5], fontSize: 11 },
+        { text: '3. Den nástupu do práce je sjednán na 1. den následujícího měsíce.', margin: [0, 0, 0, 20], fontSize: 11 },
+        { text: 'III. Mzdové a pracovní podmínky', bold: true, margin: [0, 10, 0, 10], fontSize: 14 },
+        { text: '1. Sjednává se zkušební doba v délce 3 měsíců.', margin: [0, 0, 0, 5], fontSize: 11 },
+        { text: '2. Stanovená týdenní pracovní doba činí 40 hodin.', margin: [0, 0, 0, 5], fontSize: 11 },
+        { text: `3. Zaměstnanci přísluší základní hrubá mzda ve výši ${salary} Kč měsíčně.`, margin: [0, 0, 0, 20], fontSize: 11 },
+        { text: 'IV. Závěrečná ustanovení', bold: true, margin: [0, 10, 0, 10], fontSize: 14 },
+        { text: 'Tato smlouva je uzavírána elektronicky s využitím kryptografických mechanismů (Zero-Knowledge) na platformě InLoopID. Identita zaměstnance byla spolehlivě ověřena prostřednictvím kvalifikovaného systému MojeID.', margin: [0, 0, 0, 30], fontSize: 10, alignment: 'justify' },
+        { text: '---------------------------------------------------------------------------------------------------------', color: 'gray', alignment: 'center', margin: [0, 10, 0, 10] },
+        { text: '[ ELEKTRONICKÁ PEČEŤ A KRYPTOGRAFICKÝ PODPIS ]', color: '#1e3a8a', bold: true, margin: [0, 10, 0, 5] },
+        { text: `Kontrolní součet (SHA-256): e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, fontSize: 8, color: 'darkgray' },
+        { text: `Asymetrický podpis (ECDSA P-256): ${signature || 'Čeká na podpis'}`, fontSize: 8, color: 'darkgray' }
+      ],
+      styles: { header: { fontSize: 18, bold: true } },
+      defaultStyle: { font: 'Roboto' }
+    };
+    window.pdfMake.createPdf(docDef).open();
+  };
+
+  const handleGenerateAudit = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+        setAuditLog({
+            timestamp: new Date().toISOString(),
+            blockchainTx: "0x8f3c...a12b",
+            eidasStatus: "ZNAČNÁ (Substantial)",
+            signatures: ["HR_ADMIN_K39", "MOJEID_EMP_850415"],
+            docHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        });
+        setIsProcessing(false);
+    }, 1200);
+  };
+
+  const handleGenerateKeys = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+        setShamirKeys([
+            "K1: 8b4f2c... (Správní rada)",
+            "K2: a19d8e... (HR Ředitel)",
+            "K3: f7c31a... (Právní oddělení)"
+        ]);
+        setIsRecovered(false);
+        setIsProcessing(false);
+    }, 1000);
+  };
+
+  const handleRecoverKey = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+        setIsRecovered(true);
+        setIsProcessing(false);
+    }, 1200);
+  };
+
+  if (!unlocked) {
+    return (
+      <div id="inloopid-demo" className="py-24 px-6 bg-[#0B1120] border-t border-blue-900/30 text-center">
+        <div className="max-w-2xl mx-auto bg-[#111A3A] p-12 rounded-[2.5rem] shadow-2xl border border-blue-900/50">
+          <Lock size={48} className="mx-auto text-blue-500 mb-6" />
+          <h2 className="text-3xl font-black mb-4 text-white">Technologické Demo</h2>
+          <p className="text-slate-400 mb-8">Zadejte firemní e-mail pro bezpečný přístup k simulaci Zero-Knowledge kryptografie.</p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <input type="email" value={gateEmail} onChange={(e) => setGateEmail(e.target.value)} placeholder="hr@firma.cz" className="flex-1 p-4 bg-[#0B1120] border border-blue-900/50 rounded-xl outline-none focus:border-blue-500 text-white" />
+            <button onClick={requestAccess} className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-500">Získat přístup</button>
+          </div>
+          {gateStatus && <p className="mt-6 text-sm font-bold text-emerald-400">{gateStatus}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div id="inloopid-demo" className="py-24 px-4 bg-[#0A101D] border-t border-blue-900/30">
+      <div className="max-w-5xl mx-auto bg-[#111A3A] rounded-[2rem] border border-blue-900/50 shadow-2xl p-6 md:p-8 overflow-hidden">
+        <h2 className="text-2xl font-black text-white mb-2 text-center">Plný životní cyklus dokumentu</h2>
+        <p className="text-slate-400 text-sm text-center mb-8">Od lokálního šifrování, přes MojeID až po auditní stopu a obnovu z Kapsle.</p>
+        
+        {/* Navigace fází - Horizontální scroll pro mobily */}
+        <div className="flex overflow-x-auto border-b border-blue-900/50 pb-2 mb-8 gap-6 scrollbar-hide whitespace-nowrap">
+           {[
+             { id: 1, label: '1. HR Terminál', icon: <User size={16}/> },
+             { id: 2, label: '2. Cloud Notář', icon: <Server size={16}/> },
+             { id: 3, label: '3. Zaměstnanec', icon: <Fingerprint size={16}/> },
+             { id: 4, label: '4. HR Radar', icon: <Activity size={16}/> },
+             { id: 5, label: '5. Audit (OIP)', icon: <Scale size={16}/> },
+             { id: 6, label: '6. Kapsle', icon: <Key size={16}/> }
+           ].map(tab => (
+              <button key={tab.id} onClick={() => setDemoPhase(tab.id)} className={`flex items-center gap-2 text-sm font-bold pb-2 transition-colors ${demoPhase === tab.id ? 'text-blue-400 border-b-2 border-blue-500' : 'text-slate-600 hover:text-slate-400'}`}>
+                 {tab.icon} {tab.label}
+              </button>
+           ))}
+        </div>
+
+        {/* FÁZE 1: HR */}
+        {demoPhase === 1 && (
+          <div className="space-y-6 animate-in fade-in duration-500 max-w-3xl mx-auto">
+             <div className="bg-blue-900/10 p-4 rounded-xl border border-blue-900/30 text-sm text-blue-400 font-bold mb-6">Fáze 1: HR pracovník nezadává citlivá osobní data. Zadá pouze byznysové parametry a odešle šifrovanou výzvu.</div>
+             <div className="flex flex-col sm:flex-row justify-between items-center bg-[#0B1120] p-4 rounded-xl border border-blue-900/50 gap-4">
+               <div>
+                  <h3 className="text-sm font-bold text-white mb-1">Smart Vytěžení (CV)</h3>
+                  <p className="text-xs text-slate-400">Volitelně: Získat e-mailovou adresu ze souboru.</p>
+               </div>
+               <div className="relative w-full sm:w-auto">
+                 <input type="file" accept=".pdf,.doc,.docx" onChange={handleCVUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                 <button className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold">Nahrát soubor</button>
+               </div>
+             </div>
+             <div>
+                <label className="block text-slate-400 text-xs font-bold mb-2">Soukromý e-mail uchazeče</label>
+                <input type="email" value={candidateEmail} onChange={e => setCandidateEmail(e.target.value)} className="w-full bg-[#0B1120] p-4 rounded-xl border border-blue-900/50 text-white" placeholder="novak@seznam.cz" />
+             </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label className="block text-slate-400 text-xs font-bold mb-2">Nabízená pozice</label><input value={position} onChange={e => setPosition(e.target.value)} className="w-full bg-[#0B1120] p-4 rounded-xl border border-blue-900/50 text-white" /></div>
+                <div><label className="block text-slate-400 text-xs font-bold mb-2">Hrubá mzda (Kč)</label><input value={salary} onChange={e => setSalary(e.target.value)} className="w-full bg-[#0B1120] p-4 rounded-xl border border-blue-900/50 text-white" /></div>
+             </div>
+             <button onClick={handleEncrypt} disabled={isProcessing} className="w-full mt-6 flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-colors">
+                {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Lock size={20} />} Lokálně zašifrovat a odeslat návrh
+             </button>
+          </div>
+        )}
+
+        {/* FÁZE 2: SERVER */}
+        {demoPhase === 2 && (
+          <div className="space-y-6 animate-in slide-in-from-right duration-500 max-w-3xl mx-auto">
+             <div className="bg-amber-900/10 p-4 rounded-xl border border-amber-900/30 text-sm text-amber-500 font-bold mb-6">Fáze 2: Pohled serveru. InLoopID slouží jako slepý přenašeč. Server nezná obsah smlouvy, mzdu, ani identitu uchazeče.</div>
+             <div className="bg-black/50 p-6 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto">
+                <span className="text-slate-500">POST /api/v1/hr/contracts</span><br/><br/>
+                {'{'}<br/>&nbsp;&nbsp;"tenantId": "c_8419",<br/>&nbsp;&nbsp;"encryption": "AES-256-GCM",<br/>&nbsp;&nbsp;"payload_blob": "{cipherText || 'U2FsdGVkX19... (Čeká na Fázi 1)'}"<br/>{'}'}
+             </div>
+             <button onClick={() => setDemoPhase(3)} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-colors">Přepnout na pohled uchazeče</button>
+          </div>
+        )}
+
+        {/* FÁZE 3: ZAMĚSTNANEC */}
+        {demoPhase === 3 && (
+          <div className="space-y-6 animate-in slide-in-from-right duration-500 max-w-3xl mx-auto">
+             <div className="bg-emerald-900/10 p-4 rounded-xl border border-emerald-900/30 text-sm text-emerald-400 font-bold mb-6">Fáze 3: Uchazeč obdržel notifikaci. Nyní proběhne ověření (MojeID) a následné spárování dat se šifrovaným návrhem.</div>
+             {!mojeIdData ? (
+               <div className="text-center py-8">
+                 <ShieldCheck size={64} className="mx-auto text-blue-500 mb-6" />
+                 <h3 className="text-xl font-bold text-white mb-2">Vyžadováno ověření totožnosti</h3>
+                 <p className="text-sm text-slate-400 mb-8 max-w-sm mx-auto">K dešifrování smlouvy musíte prokázat svou identitu.</p>
+                 <button onClick={handleMojeIdAuth} disabled={isProcessing} className="bg-[#FF7A00] hover:bg-[#e66e00] text-white px-8 py-4 rounded-xl font-bold flex justify-center items-center gap-2 mx-auto transition-colors w-full md:w-auto">
+                    {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <User size={20} />} Přihlásit se přes MojeID
+                 </button>
+               </div>
+             ) : (
+               <div className="animate-in fade-in duration-300">
+                 <div className="bg-[#0B1120] p-6 rounded-xl border border-emerald-500/30 mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                    <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold mb-4"><CheckCircle size={16} /> Identita ověřena (Značná)</div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                       <div><span className="text-slate-500 block text-xs">Jméno z registru</span><span className="text-white font-bold">{mojeIdData.name}</span></div>
+                       <div><span className="text-slate-500 block text-xs">Datum narození</span><span className="text-white">{mojeIdData.birthDate}</span></div>
+                       <div className="col-span-2"><span className="text-slate-500 block text-xs">Trvalý pobyt</span><span className="text-white">{mojeIdData.address}</span></div>
+                    </div>
+                 </div>
+                 <button onClick={handleSign} disabled={isProcessing} className="w-full flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold transition-colors">
+                    {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Fingerprint size={20} />} Kryptograficky podepsat dokument
+                 </button>
+               </div>
+             )}
+          </div>
+        )}
+
+        {/* FÁZE 4: HR RADAR (NOVÉ) */}
+        {demoPhase === 4 && (
+          <div className="space-y-6 animate-in slide-in-from-right duration-500">
+             <div className="bg-blue-900/10 p-4 rounded-xl border border-blue-900/30 text-sm text-blue-400 font-bold mb-6">Fáze 4: Digitální právník (HR Radar) nepřetržitě monitoruje stavy smluv a upozorňuje na blížící se termíny (zkušební doba, doba určitá).</div>
+             
+             <div className="bg-[#0B1120] border border-blue-900/50 rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-blue-900/50 bg-[#111A3A] flex justify-between items-center">
+                   <h3 className="text-white font-bold flex items-center gap-2"><Activity size={18} className="text-blue-500"/> Živé monitorování smluv</h3>
+                </div>
+                <div className="divide-y divide-blue-900/30">
+                   {/* Aktuálně podepsaná smlouva z dema */}
+                   <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:bg-white/5 transition-colors">
+                      <div>
+                         <div className="text-white font-bold flex items-center gap-2">{mojeIdData?.name || empName || 'Zatím nepodepsáno'}</div>
+                         <div className="text-xs text-slate-400">{position}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                         <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold animate-pulse">V ochranné 7denní lhůtě</span>
+                         {signature && <button onClick={printPDF} className="text-blue-400 hover:text-white p-2 bg-blue-900/30 rounded-lg transition-colors"><FileText size={18}/></button>}
+                      </div>
+                   </div>
+                   {/* Dummy záznam 1 */}
+                   <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:bg-white/5 transition-colors">
+                      <div><div className="text-white font-bold">Eva Svobodová</div><div className="text-xs text-slate-400">Marketingový specialista</div></div>
+                      <div className="flex items-center gap-4">
+                         <span className="bg-amber-500/20 text-amber-500 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold">Ve zkušební době (zbývá 12 dní)</span>
+                         <button className="text-slate-500 hover:text-white p-2 rounded-lg transition-colors"><Eye size={18}/></button>
+                      </div>
+                   </div>
+                   {/* Dummy záznam 2 */}
+                   <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:bg-white/5 transition-colors">
+                      <div><div className="text-white font-bold">Petr Dvořák</div><div className="text-xs text-slate-400">Junior Vývojář</div></div>
+                      <div className="flex items-center gap-4">
+                         <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full text-xs font-bold">Doba určitá (do 31.12.2026)</span>
+                         <button className="text-slate-500 hover:text-white p-2 rounded-lg transition-colors"><Eye size={18}/></button>
+                      </div>
+                   </div>
+                   {/* Dummy záznam 3 */}
+                   <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4 hover:bg-white/5 transition-colors opacity-60">
+                      <div><div className="text-white font-bold">Jana Malá</div><div className="text-xs text-slate-400">Asistentka</div></div>
+                      <div className="flex items-center gap-4">
+                         <span className="bg-slate-500/20 text-slate-400 border border-slate-500/30 px-3 py-1 rounded-full text-xs font-bold">Čeká na podpis uchazeče</span>
+                         <button disabled className="text-slate-700 p-2 rounded-lg"><Eye size={18}/></button>
+                      </div>
+                   </div>
+                </div>
+             </div>
+             <button onClick={() => setDemoPhase(5)} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-colors">Přejít k tvorbě auditu (OIP)</button>
+          </div>
+        )}
+
+        {/* FÁZE 5: AUDIT (NOVÉ) */}
+        {demoPhase === 5 && (
+          <div className="space-y-6 animate-in slide-in-from-right duration-500 max-w-3xl mx-auto">
+             <div className="bg-emerald-900/10 p-4 rounded-xl border border-emerald-900/30 text-sm text-emerald-400 font-bold mb-6">Fáze 5: V případě kontroly ze strany OIP nebo soudu lze jediným kliknutím vygenerovat nezfalšovatelný kryptografický report.</div>
+             
+             {!auditLog ? (
+                <div className="text-center py-8">
+                   <Scale size={64} className="mx-auto text-emerald-500 mb-6" />
+                   <h3 className="text-xl font-bold text-white mb-4">Příprava pro Státní Audit</h3>
+                   <button onClick={handleGenerateAudit} disabled={isProcessing} className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold flex justify-center items-center gap-2 mx-auto transition-colors w-full md:w-auto">
+                      {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <FileText size={20} />} Generovat důkazní břemeno
+                   </button>
+                </div>
+             ) : (
+                <div className="bg-black/50 p-6 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner animate-in fade-in duration-300">
+                   <div className="text-white mb-4 border-b border-slate-700 pb-2">--- KRYPTOGRAFICKÝ REPORT ---</div>
+                   <span className="text-blue-400">Timestamp:</span> {auditLog.timestamp}<br/>
+                   <span className="text-blue-400">Blockchain TX (Hash):</span> {auditLog.blockchainTx}<br/>
+                   <span className="text-blue-400">Úroveň eIDAS identity:</span> {auditLog.eidasStatus}<br/>
+                   <span className="text-blue-400">Podpisy (P-256):</span><br/>
+                   &nbsp;&nbsp;[1] {auditLog.signatures[0]}<br/>
+                   &nbsp;&nbsp;[2] {auditLog.signatures[1]}<br/>
+                   <span className="text-blue-400">Hash originálu:</span> {auditLog.docHash}<br/>
+                   <div className="mt-4 text-slate-500">&gt;&gt; REPORT VYGENEROVÁN ÚSPĚŠNĚ A UZAMČEN PEČETÍ &lt;&lt;</div>
+                </div>
+             )}
+             <button onClick={() => setDemoPhase(6)} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-colors">Přejít k ukázce Kapsle</button>
+          </div>
+        )}
+
+        {/* FÁZE 6: KAPSLE (NOVÉ) */}
+        {demoPhase === 6 && (
+          <div className="space-y-6 animate-in slide-in-from-right duration-500 max-w-3xl mx-auto">
+             <div className="bg-rose-900/10 p-4 rounded-xl border border-rose-900/30 text-sm text-rose-400 font-bold mb-6">Fáze 6: Ochrana proti ztrátě přístupu k HR agendě (Shamir's Secret Sharing). Hlavní klíč je rozdělen mezi více osob.</div>
+             
+             {shamirKeys.length === 0 ? (
+                <div className="text-center py-8">
+                   <Shield size={64} className="mx-auto text-blue-500 mb-6" />
+                   <h3 className="text-xl font-bold text-white mb-2">Vygenerování distribuovaných klíčů</h3>
+                   <p className="text-sm text-slate-400 mb-8">Rozdělí Master klíč na 3 nezávislé fragmenty. Pro obnovu budou potřeba alespoň 2 z nich.</p>
+                   <button onClick={handleGenerateKeys} disabled={isProcessing} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold flex justify-center items-center gap-2 mx-auto transition-colors w-full md:w-auto">
+                      {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Key size={20} />} Fragmentovat klíč (3 podíly)
+                   </button>
+                </div>
+             ) : (
+                <div className="animate-in fade-in duration-300">
+                   <div className="grid gap-3 mb-8">
+                      {shamirKeys.map((k, i) => (
+                         <div key={i} className="flex items-center gap-4 bg-[#0B1120] p-4 rounded-xl border border-slate-800">
+                            <KeyRound size={20} className="text-amber-500" />
+                            <div className="text-sm text-slate-300 font-mono">{k}</div>
+                         </div>
+                      ))}
+                   </div>
+                   {!isRecovered ? (
+                      <div className="bg-rose-900/20 border border-rose-900/50 p-6 rounded-xl text-center">
+                         <h4 className="text-white font-bold mb-2 text-lg">Simulace krizové situace</h4>
+                         <p className="text-sm text-slate-400 mb-6">Ztratili jste hlavní heslo. Nyní spojíte část K1 a K3 pro jeho matematickou obnovu.</p>
+                         <button onClick={handleRecoverKey} disabled={isProcessing} className="bg-rose-600 hover:bg-rose-500 text-white px-8 py-4 rounded-xl font-bold flex justify-center items-center gap-2 mx-auto transition-colors w-full md:w-auto">
+                            {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Unlock size={20} />} Obnovit agendu pomocí (K1 + K3)
+                         </button>
+                      </div>
+                   ) : (
+                      <div className="bg-emerald-900/20 border border-emerald-900/50 p-6 rounded-xl text-center animate-in zoom-in duration-300">
+                         <Unlock size={48} className="mx-auto text-emerald-500 mb-4" />
+                         <h4 className="text-xl font-bold text-white mb-2">Master Klíč Obnoven</h4>
+                         <p className="text-sm text-emerald-400">Přístup k HR agendě byl úspěšně a bezpečně obnoven pomocí Shamirova schématu.</p>
+                         <button onClick={() => setDemoPhase(1)} className="text-slate-500 text-sm font-bold hover:text-white transition-colors block mx-auto mt-6">Restartovat kompletní demo</button>
+                      </div>
+                   )}
+                </div>
+             )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+export const LandingPage = () => {
+
+  const menuRef = React.useRef(null);
+  React.useEffect(() => {
+      const handleClickOutside = (event) => {
+          if (menuRef.current && !menuRef.current.contains(event.target)) {
+              setIsMenuOpen(false);
+          }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('touchstart', handleClickOutside);
+      };
+  }, []);
+
+  const [showCompliance, setShowCompliance] = React.useState(false);
+  const [showB2BRegister, setShowB2BRegister] = React.useState(false);
+  const [showSalesMatrix, setShowSalesMatrix] = React.useState(false);
+  const [showHrVault, setShowHrVault] = React.useState(false);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const scrollToDemo = (e) => {
+    e.preventDefault();
+    document.getElementById('inloopid-demo')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0B1120] text-slate-100 font-sans overflow-x-hidden relative">
+      <div className="fixed top-0 left-0 w-full z-40 bg-[#0A101D]/90 backdrop-blur-xl border-b border-blue-900/30 h-20"></div>
+      <Link to="/" className="fixed z-[60] flex items-center gap-2 left-6 top-6">
+        <ShieldCheck className="text-blue-500" size={32} />
+        <span className="text-2xl font-black tracking-tighter text-white">INLOOP<span className="text-blue-500">ID</span></span>
+      </Link>
+      {/* --- VERTIKÁLNÍ EXPANDING MENU (Morphing Card) --- */}
+      <div ref={menuRef} className={`fixed top-4 right-4 md:right-6 z-[60] flex flex-col bg-[#111A3A]/95 backdrop-blur-xl text-white border border-blue-900/50 shadow-[0_15px_50px_rgba(0,0,0,0.6)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${isMenuOpen ? 'max-h-[600px] w-64 md:w-72 rounded-3xl opacity-100' : 'max-h-[48px] md:max-h-[56px] w-[48px] md:w-[56px] rounded-full'}`}>
+          
+          {/* Hlavička s tlačítkem (vždy viditelná vpravo nahoře) */}
+          <div className="flex justify-end w-full h-[48px] md:h-[56px]">
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-[48px] md:w-[56px] h-[48px] md:h-[56px] flex items-center justify-center hover:bg-white/10 transition-colors rounded-full flex-shrink-0 outline-none">
+                  {isMenuOpen ? <X size={20} className="text-blue-400" /> : <Menu size={20} className="text-slate-300" />}
+              </button>
+          </div>
+
+          {/* Tělo menu (viditelné po rozbalení) */}
+          <div className={`flex flex-col w-full px-5 pb-6 gap-1 transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 delay-100' : 'opacity-0 pointer-events-none'}`}>
+              
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-2">Enterprise Nástroje</div>
+              
+              <button onClick={() => {setShowB2BRegister(true); setIsMenuOpen(false);}} className="text-left w-full px-3 py-2.5 rounded-xl text-sm font-bold text-white hover:bg-blue-600/20 hover:text-blue-400 transition-colors flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> B2B Workspace
+              </button>
+              
+              <button onClick={() => {setShowHrVault(true); setIsMenuOpen(false);}} className="text-left w-full px-3 py-2.5 rounded-xl text-sm font-bold text-emerald-400 hover:bg-emerald-900/30 transition-colors flex items-center justify-between">
+                  <span className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> HR Vault</span>
+                  <span className="text-[9px] bg-emerald-950 border border-emerald-900 px-1.5 py-0.5 rounded opacity-70">Z-K</span>
+              </button>
+              
+              <button onClick={() => {setShowSalesMatrix(true); setIsMenuOpen(false);}} className="text-left w-full px-3 py-2.5 rounded-xl text-sm font-bold text-purple-400 hover:bg-purple-900/30 transition-colors flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div> C-Level Argumenty
+              </button>
+              
+              <div className="w-full h-px bg-slate-800/80 my-3"></div>
+              
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-2">Standardní Prezentace</div>
+              
+              <Link to="/hr" onClick={() => setIsMenuOpen(false)} className="px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                  HR Administrace
+              </Link>
+              
+              <Link to="/employee" onClick={() => setIsMenuOpen(false)} className="px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                  Zaměstnanecký portál
+              </Link>
+          </div>
+      </div>
+
+      {/* --- INJEKTOVANÉ MODÁLNÍ VRSTVY PRO HUB --- */}
+      {showB2BRegister && <B2BRegistrationModal onClose={() => setShowB2BRegister(false)} />}
+      
+      {showHrVault && (
+          <div className="fixed inset-0 z-[70] bg-[#0B1120]/95 overflow-y-auto pt-20 pb-12 px-4 backdrop-blur-xl">
+              <button onClick={() => setShowHrVault(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white bg-[#112240] p-3 rounded-full z-[80] border border-slate-700 transition-colors shadow-lg">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+              </button>
+              <div className="max-w-7xl mx-auto relative"><HRDecryptionVault /></div>
+          </div>
+      )}
+      
+      {showSalesMatrix && <B2BArgumentationMatrix onClose={() => setShowSalesMatrix(false)} />}
+
+
+      <div className="relative z-10 pt-40">
+        <section className="px-6 text-center max-w-5xl mx-auto space-y-8 pb-24">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-900/20 border border-blue-500/30 text-[11px] font-bold uppercase tracking-widest text-blue-400 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> Enterprise standard s nulovou znalostí
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-[1.05] text-white">Digitální suverenita <br/>pro korporátní HR</h1>
+          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto font-medium leading-relaxed">
+            Jediná platforma pro bezpečný onboarding, která neslibuje bezpečnost smluvně, ale vynucuje ji matematickou nedostupností dešifrovacích klíčů na straně provozovatele.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            <button onClick={scrollToDemo} className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all text-base">Vyzkoušet interaktivní simulátor</button>
+          </div>
+        </section>
+
+        <FinancialMetrics />
+        <PitchDeck />
+        <ProcessVisualization />
+        <InteractiveDemo />
+
+        <footer className="py-12 border-t border-blue-900/30 bg-[#0A101D] text-center text-slate-500 text-xs font-semibold">
+          <p>© {new Date().getFullYear()} InLoopID Enterprise. Zabezpečené digitální HR ekosystémy. Všechna práva vyhrazena.</p>
+        </footer>
+      </div>
+    </div>
+  );
+};

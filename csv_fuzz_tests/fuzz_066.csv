@@ -1,0 +1,12 @@
+A,B,C,D
+6669,Eva,Němcová,invalid-email,Manager
+5982,Eva,Dvořák,invalid-email,Manager
+3608,Petra,Němcová,tomáš.bílá@vendor.io,Manager
+7796,Martin,Procházka,invalid-email,Engineer
+6632,Eva,Bílá,martin.dvořák@seznam.cz,Engineer
+2696,Petr,Malá,jan.dvořák@company.com,Intern,EXTRA_COLUMN_iCXwd
+9338,Petr,Malá,lucie.malá@company.com,HR
+7514,Jana,Novák,@missinguser.cz,Engineer
+1345,Tomáš,,anna.němcová@seznam.cz,Engineer,EXTRA_COLUMN_rFLuN
+6286,Martin,Procházka,karel.novák@external.net,Engineer
+6578,Tomáš,Malá,jana.němcová@seznam.cz,HR

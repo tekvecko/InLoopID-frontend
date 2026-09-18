@@ -1,0 +1,21 @@
+EmployeeID|FirstName|LastName|Email|Role
+9887	Jan	Malá	jan.dvořák@vendor.io	Vendor
+5265|Karel|Svoboda|@missinguser.cz|Vendor
+6155,Jana,Svoboda,no.domain@,Vendor
+3575|Petr|Němcová|anna.svoboda@seznam.cz|Vendor
+5425,Eva,Bílá,karel.novák@gmail.com,HR
+5425|Eva|Bílá|karel.novák@gmail.com|HR
+3218,Eva,Svoboda,karel.bílá@company.com,Intern
+6435,,Svoboda,eva.král@firma.cz,Engineer,EXTRA_COLUMN_GCIfu
+4152,Anna,Dvořák,martin.král@company.com,Vendor
+4843,Jana,Dvořák,martin.dvořák@seznam.cz,HR
+4329;Jana;Novák;no.domain@;Intern
+7733	Anna	Procházka	petra.bílá@seznam.cz	Intern
+7629;Petra;Dvořák;invalid-email;Vendor
+7629	Petra	Dvořák	invalid-email	Vendor
+1096;;Němcová;anna.svoboda@vendor.io;HR;EXTRA_COLUMN_dAnmG
+7267|Petr|Malá|jan.bílá@external.net|Intern
+7267;Petr;Malá;jan.bílá@external.net;Intern
+4821;Jana;Bílá;broken@domain;Vendor
+8076|Petra|Procházka|karel.němcová@gmail.com|Vendor
+2131|Lucie|Dvořák|broken@domain|Manager

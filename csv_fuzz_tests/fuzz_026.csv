@@ -1,0 +1,17 @@
+A	B	C	D
+2121	Martin	Dvořák	petr.bílá@seznam.cz	HR
+3519	Petr	Dvořák	missing-at.com	Intern
+7933;Petra;Němcová;invalid-email;Manager
+4530	Jana	Bílá	tomáš.bílá@company.com	Vendor
+4177;Petra
+2561	Karel	Dvořák	karel.svoboda@gmail.com	HR
+8151,Petr,Svoboda,lucie.malá@firma.cz,Engineer
+4319;Jan;Procházka;martin.procházka@company.com;Intern
+2133	Eva	Procházka	jan.němcová@firma.cz	HR	EXTRA_COLUMN_ZYpjn
+9740|Eva|Dvořák|tomáš.malá@firma.cz|Engineer
+9740,Eva,Dvořák,tomáš.malá@firma.cz,Engineer
+6051	Karel	Novák	karel.bílá@seznam.cz	Vendor
+1209|Tomáš|Svoboda|no.domain@|HR
+3058|Tomáš|Procházka|no.domain@||EXTRA_COLUMN_eengu
+9951	Eva	Dvořák	eva.bílá@gmail.com	HR
+3452,Petra,Němcová,jana.němcová@external.net,Intern

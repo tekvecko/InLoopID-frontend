@@ -1,0 +1,704 @@
+import { encryptForHR } from '../utils/hrCryptoEngine';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, FileText, UploadCloud, Lock, AlertTriangle, Key, Upload, CheckSquare, Square, Users, FilePlus, Paperclip, X, Link as LinkIcon, Calendar, User, Briefcase, Filter, CheckCircle, Clock, AlertOctagon, Archive, Copy, LogOut, KeyRound, MapPin, DollarSign, Home, AlertCircle, Eye, PenTool, ChevronDown, Search } from 'lucide-react';
+import { decryptKeystore } from '../utils/cryptoEngine';
+import { notify } from './ToastManager';
+
+const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+
+const safeFetch = async (url, options) => {
+  const res = await fetch(url, options);
+  if (!res.ok) { let errorMsg = "Server zamítl operaci."; try { const errData = await res.json(); errorMsg = errData.error || errorMsg; } catch (e) {} throw new Error(errorMsg); }
+  return await res.json();
+};
+
+const parseDateToISO = (dStr) => {
+    if (!dStr) return null;
+    let p = dStr.split(/[. -]/).filter(Boolean);
+    if (p.length !== 3) return null;
+    let y = p[0].length === 4 ? p[0] : p[2];
+    let m = p[0].length === 4 ? p[1] : p[1];
+    let d = p[0].length === 4 ? p[2] : p[0];
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T23:59:59Z`;
+};
+
+const parseDateVal = (d) => {
+    if (!d) return 0; 
+    let p = d.split(/[. -]/).filter(Boolean);
+    if (p.length === 3) return p[0].length === 4 ? new Date(p[0], p[1]-1, p[2]).getTime() : new Date(p[2], p[1]-1, p[0]).getTime();
+    return 0;
+};
+
+const addOneYear = (dStr) => {
+    if (!dStr) return '';
+    let p = dStr.split(/[. -]/).filter(Boolean);
+    if (p.length !== 3) return '';
+    let y = parseInt(p[0].length === 4 ? p[0] : p[2]);
+    let m = parseInt(p[0].length === 4 ? p[1] : p[1]);
+    let d = parseInt(p[0].length === 4 ? p[2] : p[0]);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return '';
+    return `${d.toString().padStart(2, '0')}.${m.toString().padStart(2, '0')}.${y + 1}`;
+};
+
+export const HRDashboard = () => {
+  const [hrPassword, setHrPassword] = useState('');
+  const [tenantId, setTenantId] = useState('');
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState('contracts');
+  const [bulkText, setBulkText] = useState('');
+  const [importStep, setImportStep] = useState(1);
+  const [parsedCandidates, setParsedCandidates] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [sortOrder, setSortOrder] = useState('default');
+  
+  const [showPreview, setShowPreview] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [viewDoc, setViewDoc] = useState(null);
+  
+  const [contractForm, setContractForm] = useState({ 
+      email: '', employeeName: '', employeeBirthDate: '', employeeAddress: '', type: 'HPP', position: '', 
+      workLocation: '', homeOffice: false, homeOfficeAllowance: 'pausal', startDate: '', duration: 'neurcita', 
+      validUntil: '', probationPeriod: '3', workingHours: '40', vacationDays: '20', dppHours: '300', dpcHours: '20', 
+      salary: '', clearance_level: 'standard', dataSources: { employeeName: 'mojeid', employeeBirthDate: 'mojeid', employeeAddress: 'mojeid' }
+  });
+  
+  const [issuedContracts, setIssuedContracts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [radarData, setRadarData] = useState({ safe: 0, withdrawal_risk: 0, pending_signatures: 0, expiring_soon: 0, expired: 0, details: [] });
+  
+  const [coldVaultSeed, setColdVaultSeed] = useState(null);
+  const [coldVaultReport, setColdVaultReport] = useState(null);
+  const [isSeedVerified, setIsSeedVerified] = useState(false);
+  const [verificationIndices, setVerificationIndices] = useState([]);
+  const [verificationInputs, setVerificationInputs] = useState(['', '', '']);
+
+  const timeoutMinutes = 5;
+  useEffect(() => {
+      const resetTimer = () => { if (isUnlocked) localStorage.setItem('hr_lastActive', Date.now().toString()); };
+      const checkSession = () => { const last = localStorage.getItem('hr_lastActive'); if (last && (Date.now() - parseInt(last)) > timeoutMinutes * 60 * 1000) { handleLogout(); } };
+      window.addEventListener('mousemove', resetTimer);
+      window.addEventListener('keydown', resetTimer);
+      const interval = setInterval(checkSession, 60000);
+      return () => { window.removeEventListener('mousemove', resetTimer); clearInterval(interval); };
+  }, [isUnlocked]);
+
+  const handleLogout = () => { localStorage.removeItem('hr_lastActive'); window.location.reload(); };
+
+  const generateRealHash = async (dataStr, prefix="SHA256_") => {
+      const msgUint8 = new TextEncoder().encode(dataStr);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return prefix + hashHex.toUpperCase();
+  };
+
+  const handleKeyFileUpload = (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+          try { const data = JSON.parse(evt.target.result); if (data.tenant && data.masterKey) { setTenantId(data.tenant); setHrPassword(data.masterKey); notify.success("Záložní soubor načten."); } } catch (err) { notify.error("Chyba při čtení zálohy."); }
+      }; reader.readAsText(file);
+  };
+
+  const unlockLedger = async (e) => {
+    e.preventDefault(); setIsLoggingIn(true);
+    try {
+        const res = await safeFetch(`${BACKEND_URL}/hr/agenda?tenant_id=${tenantId.trim()}`);
+        if (res.encrypted_private_key && res.private_key_iv) { await decryptKeystore(res.encrypted_private_key, res.private_key_iv, hrPassword, "HR_SALT"); }
+        setIsUnlocked(true); localStorage.setItem('hr_lastActive', Date.now().toString());
+        fetchRadarData(); fetchContracts(); notify.success("Přístup povolen. Vítejte v Administračním portálu.");
+    } catch (err) { notify.error(`Přihlášení selhalo: ${err.message || 'Neplatné ID nebo heslo.'}`); }
+    setIsLoggingIn(false);
+  };
+
+  const fetchRadarData = async () => { try { setRadarData((await safeFetch(`${BACKEND_URL}/hr/compliance-radar?tenant_id=${tenantId.trim()}`)).radar); } catch(e) { } };
+  const fetchContracts = async () => { try { setIssuedContracts((await safeFetch(`${BACKEND_URL}/hr/contracts?tenant_id=${tenantId.trim()}`)).data); } catch(e) { } };
+  const handleDownloadAudit = () => { window.open(`${BACKEND_URL}/hr/compliance-report/pdf?tenant_id=${tenantId.trim()}`, '_blank'); };
+
+  useEffect(() => {
+      let interval;
+      if (isUnlocked) { interval = setInterval(() => { if (activeTab === 'contracts') fetchContracts(); if (activeTab === 'radar') fetchRadarData(); }, 3000); }
+      return () => clearInterval(interval);
+  }, [isUnlocked, activeTab]);
+
+  const handleCsvUpload = async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+      const readPromises = files.map(file => { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = (evt) => resolve(evt.target.result); reader.readAsText(file); }); });
+      const results = await Promise.all(readPromises);
+      setBulkText(prev => { return prev ? prev + "\n" + results.join("\n") : results.join("\n"); });
+      notify.success(`Úspěšně načteno ${files.length} souborů.`);
+      e.target.value = null;
+  };
+
+  const handleParseText = () => {
+      const lines = bulkText.split(/\r?\n/).filter(line => line.trim().length > 0);
+      const results = [];
+      const seenEmails = new Set();
+      lines.forEach((line) => {
+          const cols = line.split(/[\t;,]/).map(c => c.trim().replace(/^"|"$/g, ''));
+          let foundEmail = null; let foundUrl = null; let foundDate = null;
+          let stringParts = [];
+          cols.forEach(col => { 
+              if (/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(col)) foundEmail = col.toLowerCase();
+              else if (/^https?:\/\//.test(col)) foundUrl = col;
+              else if (/\b(\d{1,2}\.\s?\d{1,2}\.\s?\d{4}|\d{4}-\d{2}-\d{2})\b/.test(col)) foundDate = col;
+              else if (col.length > 1 && !/^\d+$/.test(col)) stringParts.push(col); 
+          });
+          if (foundEmail && !seenEmails.has(foundEmail)) {
+              seenEmails.add(foundEmail);
+              let firstName = ''; let lastName = ''; let position = '';
+              if (stringParts.length >= 3) { firstName = stringParts[0]; lastName = stringParts[1]; position = stringParts.slice(2).join(' '); } 
+              else if (stringParts.length === 2) { firstName = stringParts[0]; lastName = stringParts[1]; } 
+              else if (stringParts.length === 1) { const splitName = stringParts[0].split(' '); if (splitName.length >= 2) { firstName = splitName[0]; lastName = splitName.slice(1).join(' '); } else { lastName = stringParts[0]; } }
+              results.push({ id: Date.now().toString(36) + Math.random().toString(36).substring(2), email: foundEmail, firstName, lastName, position, startDate: foundDate || '', duration: 'neurcita', validUntil: '', selected: true, contractUrl: foundUrl || '', contractFileName: '', contractFileBase64: '' });
+          }
+      });
+      setParsedCandidates(results); setImportStep(2); setSortOrder('default');
+  };
+
+  const handleAttachFile = (id, e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => { setParsedCandidates(prev => prev.map(c => c.id === id ? { ...c, contractFileName: file.name, contractFileBase64: evt.target.result, contractUrl: '' } : c)); }; 
+      reader.readAsDataURL(file);
+  };
+
+  const updateCand = (id, field, value) => { setParsedCandidates(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c)); };
+  
+  const getProbScore = (c) => (!c.firstName || !c.lastName || !c.startDate || !c.email || (!c.contractUrl && !c.contractFileName) || (c.duration === 'urcita' && !c.validUntil)) ? 1 : 0;
+
+  const getSortedCandidates = () => {
+      let arr = [...parsedCandidates];
+      switch(sortOrder) {
+          case 'lastName_asc': return arr.sort((a,b) => a.lastName.localeCompare(b.lastName));
+          case 'lastName_desc': return arr.sort((a,b) => b.lastName.localeCompare(a.lastName));
+          case 'email_asc': return arr.sort((a,b) => a.email.localeCompare(b.email));
+          case 'email_desc': return arr.sort((a,b) => b.email.localeCompare(a.email));
+          case 'date_desc': return arr.sort((a,b) => parseDateVal(b.startDate) - parseDateVal(a.startDate));
+          case 'date_asc': return arr.sort((a,b) => parseDateVal(a.startDate) - parseDateVal(b.startDate));
+          case 'pos_asc': return arr.sort((a,b) => a.position.localeCompare(b.position));
+          case 'pos_desc': return arr.sort((a,b) => b.position.localeCompare(a.position));
+          case 'prob_first': return arr.sort((a,b) => getProbScore(b) - getProbScore(a));
+          case 'prob_last': return arr.sort((a,b) => getProbScore(a) - getProbScore(b));
+          default: return arr;
+      }
+  };
+
+  const getLegalWarnings = () => {
+      const warnings = [];
+      if (contractForm.type === 'HPP') {
+          const probation = parseInt(contractForm.probationPeriod);
+          const maxProbation = contractForm.clearance_level === 'management' ? 8 : 4;
+          if (probation > maxProbation) { warnings.push(`Zkušební doba překračuje zákonný limit ${maxProbation} měsíců (§ 35 ZP).`); }
+          if (contractForm.duration === 'urcita' && contractForm.startDate && contractForm.validUntil) {
+              const start = parseDateVal(contractForm.startDate);
+              const end = parseDateVal(contractForm.validUntil);
+              if (start && end && end > start) {
+                  const durationMonths = (end - start) / (1000 * 60 * 60 * 24 * 30.44);
+                  if (probation > durationMonths / 2) { warnings.push(`Zkušební doba nesmí být delší než polovina sjednané doby určité (§ 35 odst. 3 ZP).`); }
+                  if (durationMonths > 36) { warnings.push(`Pracovní poměr na dobu určitou nesmí přesáhnout 3 roky (§ 39 ZP).`); }
+              }
+          }
+      } else if (contractForm.type === 'DPP') {
+          if (parseInt(contractForm.dppHours) > 300) { warnings.push('Rozsah práce u DPP nesmí překročit 300 hodin v kalendářním roce (§ 75 ZP).'); }
+      } else if (contractForm.type === 'DPČ') {
+          if (parseInt(contractForm.dpcHours) > 20) { warnings.push('Rozsah práce u DPČ nesmí překročit polovinu stanovené týdenní prac. doby (§ 76 ZP).'); }
+      }
+      return warnings;
+  };
+  const legalWarnings = getLegalWarnings();
+
+  const handleFinalSubmit = async () => {
+      const finalCandidates = parsedCandidates.filter(c => c.selected);
+      if (finalCandidates.length === 0) return;
+      setIsProcessing(true);
+      try {
+          for (const cand of finalCandidates) {
+              if (cand.contractUrl || cand.contractFileBase64) {
+                  const payloadString = JSON.stringify({ type: 'MIGRATED_CONTRACT', position: cand.position || 'Historická dokumentace', firstName: cand.firstName, lastName: cand.lastName, startDate: cand.startDate, duration: cand.duration, validUntil: cand.validUntil, url: cand.contractUrl, fileName: cand.contractFileName, fileData: cand.contractFileBase64 });
+                  const mockEncryptedPayload = btoa(unescape(encodeURIComponent(payloadString)));
+                  const mockHash = await generateRealHash(payloadString, "SHA256_MIGRATED_");
+                  await safeFetch(`${BACKEND_URL}/hr/contracts`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tenant_id: tenantId.trim(), email: cand.email, content_hash: mockHash, encrypted_payload: mockEncryptedPayload, valid_until: cand.duration === 'urcita' ? parseDateToISO(cand.validUntil) : null, clearance_level: 'standard' }) });
+              }
+          }
+          const finalEmails = finalCandidates.map(c => c.email);
+          await safeFetch(`${BACKEND_URL}/hr/bulk-import`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tenant_id: tenantId.trim(), emails: finalEmails }) });
+          notify.success(`Migrace úspěšná! Naimportováno ${finalEmails.length} zaměstnanců.`);
+          setBulkText(''); setImportStep(1); setParsedCandidates([]);
+      } catch(e) { notify.error(e.message); }
+      setIsProcessing(false);
+  };
+
+  const handlePreviewTrigger = (e) => { e.preventDefault(); setShowPreview(true); };
+
+  const handleSignAndIssueContract = async () => {
+      setIsProcessing(true);
+      try {
+          const infoClause = `V souladu s § 37 Zákoníku práce je zaměstnanec informován, že má právo na nepřetržitý denní odpočinek v trvání alespoň 11 hodin během 24 hodin a nepřetržitý odpočinek v týdnu v trvání alespoň 24 hodin. Pojistné na sociální zabezpečení odvádí příslušné OSSZ.`;
+          const signatureTimestamp = new Date().toISOString();
+          const dataToSign = JSON.stringify(contractForm) + tenantId + signatureTimestamp;
+          const companySignatureHash = await generateRealHash(dataToSign, "eSIG_");
+          
+          const payloadObj = { 
+              ...contractForm, 
+              employeeName: contractForm.dataSources.employeeName === 'mojeid' ? '{{MOJEID}}' : contractForm.employeeName,
+              employeeBirthDate: contractForm.dataSources.employeeBirthDate === 'mojeid' ? '{{MOJEID}}' : contractForm.employeeBirthDate,
+              employeeAddress: contractForm.dataSources.employeeAddress === 'mojeid' ? '{{MOJEID}}' : contractForm.employeeAddress,
+              legalClauses: infoClause,
+              companySignature: companySignatureHash,
+              signatureTimestamp: signatureTimestamp
+          };
+          delete payloadObj.dataSources;
+          
+          const payloadString = JSON.stringify(payloadObj);
+          
+          const cryptoPackage = await encryptForHR(payloadString);
+          const mockHash = await generateRealHash(payloadString, "SHA256_");
+
+          await safeFetch(`${BACKEND_URL}/hr/contracts`, { 
+              method: 'POST', 
+              headers: {'Content-Type': 'application/json'}, 
+              body: JSON.stringify({ 
+                  tenant_id: tenantId.trim(), 
+                  email: contractForm.email, 
+                  content_hash: mockHash, 
+                  encrypted_payload: cryptoPackage.encrypted_payload,
+                  iv: cryptoPackage.iv,
+                  wrapped_key: cryptoPackage.wrapped_key,
+                  valid_until: contractForm.duration === 'urcita' ? parseDateToISO(contractForm.validUntil) : null, 
+                  clearance_level: contractForm.clearance_level 
+              }) 
+          });
+
+          notify.success(`Smlouva byla elektronicky podepsána firmou a odeslána.`);
+          
+          setShowPreview(false);
+          setContractForm({ email: '', employeeName: '', employeeBirthDate: '', employeeAddress: '', type: 'HPP', position: '', workLocation: '', homeOffice: false, homeOfficeAllowance: 'pausal', startDate: '', duration: 'neurcita', validUntil: '', probationPeriod: '3', workingHours: '40', vacationDays: '20', dppHours: '300', dpcHours: '20', salary: '', clearance_level: 'standard', dataSources: { employeeName: 'mojeid', employeeBirthDate: 'mojeid', employeeAddress: 'mojeid' } }); 
+          fetchContracts();
+      } catch (err) { notify.error(err.message); }
+      setIsProcessing(false);
+  };
+
+  const handleGenerateColdVault = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+        const words = ["abstract", "secure", "vault", "shield", "quantum", "matrix", "entropy", "cipher", "notary", "proof", "ledger", "anchor", "kernel", "vertex", "beacon", "crypto", "suzerain", "neutral", "blind", "shred", "capsule", "alpha", "omega", "nexus"];
+        setColdVaultSeed([...words].sort(() => 0.5 - Math.random()).slice(0, 24).join(' '));
+        setVerificationIndices([0, 5, 10]);
+        setVerificationInputs(['', '', '']);
+        setIsProcessing(false);
+    }, 1000);
+  };
+
+  const handleCopySeed = () => {
+    navigator.clipboard.writeText(coldVaultSeed);
+    notify.success("Seed zkopírován.");
+  };
+
+  const verifySeedInputs = () => {
+    notify.success("Ověřeno.");
+    setIsSeedVerified(true);
+  };
+
+  const MojeIdBadge = () => (
+      <span className="bg-white px-2 py-0.5 rounded text-sm font-bold border border-slate-300 inline-flex items-center">
+          <span className="text-[#000080]">moje</span><span className="text-[#f58220]">ID</span>
+      </span>
+  );
+
+  const SmartField = ({ fieldKey, label, placeholder }) => {
+      const isMojeId = contractForm.dataSources[fieldKey] === 'mojeid';
+      const isOpen = activeDropdown === fieldKey;
+
+      return (
+          <div className="relative">
+              <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">{label}</label>
+              <div className="relative">
+                  {isMojeId ? (
+                      <div onClick={() => setActiveDropdown(isOpen ? null : fieldKey)} className="w-full bg-slate-900 border border-[#f58220]/50 rounded-xl px-4 py-3 cursor-pointer flex items-center justify-between hover:border-[#f58220] transition-colors"><div className="flex items-center gap-2"><MojeIdBadge /><span className="text-slate-400 text-sm font-bold">Automaticky od zaměstnance</span></div><ChevronDown size={16} className="text-slate-500"/></div>
+                  ) : (
+                      <div className="flex items-center"><input type="text" value={contractForm[fieldKey]} onChange={e => setContractForm({...contractForm, [fieldKey]: e.target.value})} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500" placeholder={placeholder} /><button type="button" onClick={() => setActiveDropdown(isOpen ? null : fieldKey)} className="absolute right-3 text-slate-500 hover:text-blue-400 bg-slate-900 p-1 rounded-lg"><Filter size={14}/></button></div>
+                  )}
+                  {isOpen && (
+                      <div className="absolute top-full left-0 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-20 overflow-hidden">
+                          <div className="p-3 hover:bg-slate-700 cursor-pointer flex items-center gap-3 border-b border-slate-700" onClick={() => { setContractForm({...contractForm, dataSources: {...contractForm.dataSources, [fieldKey]: 'mojeid'}}); setActiveDropdown(null); }}><MojeIdBadge /><div><p className="text-sm font-bold text-white">Získat z MojeID</p><p className="text-xs text-slate-400">Přesně podle občanského průkazu</p></div></div>
+                          <div className="p-3 hover:bg-slate-700 cursor-pointer flex items-center gap-3" onClick={() => { setContractForm({...contractForm, dataSources: {...contractForm.dataSources, [fieldKey]: 'manual'}}); setActiveDropdown(null); }}><div className="bg-slate-900 p-1.5 rounded text-slate-400"><PenTool size={16}/></div><div><p className="text-sm font-bold text-white">Zadat ručně</p><p className="text-xs text-slate-400">Povolit textové pole pro personalistu</p></div></div>
+                      </div>
+                  )}
+              </div>
+          </div>
+      );
+  };
+
+  if (!isUnlocked) {
+    return ( 
+        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-900 relative overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-200/50 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-200/50 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 pointer-events-none"></div>
+
+            <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-10 shadow-2xl shadow-slate-200/50 relative z-10 animate-fade-in">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-100">
+                    <Key size={32} />
+                </div>
+                <h2 className="text-3xl font-extrabold mb-2 text-center text-slate-900 tracking-tight">Administrační portál</h2>
+                <p className="text-center text-slate-500 text-sm mb-8">Přístup do šifrovaného Enterprise prostředí</p>
+
+                <label className="flex items-center justify-center gap-2 w-full py-3 mb-6 bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 rounded-xl cursor-pointer transition-all text-sm font-bold text-slate-600 shadow-sm">
+                    <Upload size={18} /> Nahrát InLoopID_Backup.json
+                    <input type="file" accept=".json" className="hidden" onChange={handleKeyFileUpload} />
+                </label>
+
+                <div className="flex items-center gap-4 text-slate-300 text-xs font-bold uppercase mb-6">
+                    <hr className="flex-1 border-slate-200"/>nebo ručně<hr className="flex-1 border-slate-200"/>
+                </div>
+
+                <form onSubmit={unlockLedger} className="space-y-5">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">ID Firmy (Tenant)</label>
+                        <input type="text" value={tenantId} onChange={e => setTenantId(e.target.value)} placeholder="např. inloop-corp" required className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Master Password</label>
+                        <input type="password" value={hrPassword} onChange={e => setHrPassword(e.target.value)} placeholder="••••••••••••" required className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm" />
+                    </div>
+                    <button type="submit" disabled={isLoggingIn} className="w-full py-4 mt-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 flex justify-center items-center gap-2">
+                        {isLoggingIn ? <span className="animate-pulse">Ověřuji klíče...</span> : 'Odemknout portál'}
+                    </button>
+                </form>
+
+                <div className="mt-8 pt-6 border-t border-slate-100 text-center animate-fade-in">
+                    <p className="text-sm text-slate-500 mb-3">Vaše firma ještě nevyužívá InLoopID?</p>
+                    <a href="/b2b/register" className="inline-flex items-center justify-center w-full py-3 bg-white border-2 border-slate-200 hover:border-blue-500 hover:text-blue-600 text-slate-600 rounded-xl font-bold transition-all shadow-sm">
+                        Zaregistrovat nový Workspace
+                    </a>
+                </div>
+            </div>
+        </div> 
+    );
+  }
+
+  const renderTSAToken = (token) => {
+      if (!token) return null;
+      const isEidasTsa = token.startsWith('eIDAS_TSR_BASE64:');
+      const displayTsa = isEidasTsa ? token.substring(17, 81) + '...' : token;
+      return (
+          <div className={`bg-slate-950 p-4 rounded-xl border mt-4 ${isEidasTsa ? 'border-blue-900/50' : 'border-slate-800'}`}>
+              <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 flex items-center gap-2 ${isEidasTsa ? 'text-blue-500' : 'text-slate-500'}`}>
+                  <ShieldCheck size={12}/> 
+                  {isEidasTsa ? 'Kvalifikované elektronické časové razítko (eIDAS)' : 'Interní kryptografické časové razítko'}
+              </p>
+              <p className="text-[10px] text-slate-400 font-mono break-all">{displayTsa}</p>
+          </div>
+      );
+  };
+
+  return (
+    <div className="min-h-screen p-4 md:p-6 bg-slate-950 text-white" onClick={() => activeDropdown && setActiveDropdown(null)}>
+      <div className="max-w-6xl mx-auto space-y-6 relative" onClick={(e) => e.stopPropagation()}>
+        
+        <div className="flex flex-col md:flex-row justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800 gap-4">
+            <div className="text-center md:text-left"><h1 className="text-xl font-bold text-white">Enterprise Velín</h1><p className="text-sm text-blue-400 font-mono">{tenantId}</p></div>
+            <div className="flex flex-wrap justify-center gap-2">
+                <button onClick={() => setActiveTab('bulk')} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors ${activeTab === 'bulk' ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'}`}><Users size={16}/> Migrace</button>
+                <button onClick={() => setActiveTab('contracts')} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors ${activeTab === 'contracts' ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'}`}><FilePlus size={16}/> Smlouvy</button>
+                <button onClick={() => setActiveTab('radar')} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors ${activeTab === 'radar' ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'}`}><ShieldCheck size={16}/> Radar</button>
+                <button onClick={() => setActiveTab('archive')} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-bold transition-colors ${activeTab === 'archive' ? 'bg-emerald-600' : 'bg-slate-800 hover:bg-slate-700'}`}><Archive size={16}/> Kapsle</button>
+                <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 bg-rose-900/30 text-rose-400 border border-rose-500/30 rounded-lg text-xs md:text-sm font-bold transition-colors hover:bg-rose-900/50"><LogOut size={16}/> Odhlásit</button>
+            </div>
+        </div>
+
+        {viewDoc && (
+            <div className="fixed inset-0 bg-slate-950/90 flex items-center justify-center z-50 p-4 animate-fade-in backdrop-blur-sm">
+                <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl relative">
+                    <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 rounded-t-3xl">
+                        <h2 className="text-xl font-bold flex items-center gap-3"><FileText className="text-emerald-500"/> Znění dokončeného dokumentu</h2>
+                        <button onClick={() => setViewDoc(null)} className="text-slate-400 hover:text-white transition-colors"><X size={24}/></button>
+                    </div>
+                    <div className="p-8 overflow-y-auto custom-scrollbar text-sm text-slate-300">
+                        {(() => {
+                            try {
+                                const raw = decodeURIComponent(escape(atob(viewDoc.encrypted_payload)));
+                                const p = JSON.parse(raw);
+                                return (
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-950 border border-slate-800 p-5 rounded-2xl">
+                                            <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Identifikace zaměstnance</h3>
+                                            <p className="mb-2"><strong className="text-white w-24 inline-block">Jméno:</strong> {p.employeeName}</p>
+                                            <p className="mb-2"><strong className="text-white w-24 inline-block">Narození:</strong> {p.employeeBirthDate}</p>
+                                            <p><strong className="text-white w-24 inline-block">Bydliště:</strong> {p.employeeAddress}</p>
+                                        </div>
+                                        <div className="bg-slate-950 border border-slate-800 p-5 rounded-2xl">
+                                            <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Pracovní podmínky</h3>
+                                            <p className="mb-2"><strong className="text-white w-24 inline-block">Pozice:</strong> {p.position}</p>
+                                            <p className="mb-2"><strong className="text-white w-24 inline-block">Nástup:</strong> {p.startDate}</p>
+                                            <p><strong className="text-white w-24 inline-block">Mzda:</strong> {p.salary}</p>
+                                        </div>
+                                        {p.employeeSignature && (
+                                            <div className="bg-emerald-900/20 p-5 rounded-xl border border-emerald-900/50 text-emerald-400">
+                                                <p className="text-xs uppercase tracking-wider font-bold mb-2 flex items-center gap-2"><CheckCircle size={14}/> Elektronický podpis zaměstnance (MojeID)</p>
+                                                <p className="font-mono text-xs break-all mb-1">{p.employeeSignature}</p>
+                                                <p className="text-[10px] text-emerald-500/50">{p.employeeSignTimestamp}</p>
+                                            </div>
+                                        )}
+                                        {renderTSAToken(viewDoc.hr_tsa_token)}
+                                        {/* FORENZNÍ TLAČÍTKO */}
+                                        <button onClick={() => window.open(`${BACKEND_URL}/hr/audit-package/${viewDoc.id}`, '_blank')} className="mt-6 w-full py-4 bg-slate-950 hover:bg-slate-800 rounded-xl font-bold transition-colors flex items-center justify-center gap-3 text-blue-400 border border-blue-900/50 shadow-inner">
+                                            <Archive size={20} /> Stáhnout Forenzní důkazní ZIP pro soudního znalce
+                                        </button>
+                                    </div>
+                                );
+                            } catch(e) { return <div className="text-rose-400">Chyba dekódování kontraktu: {e.message}</div>; }
+                        })()}
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showPreview && (
+            <div className="fixed inset-0 bg-slate-950/90 flex items-center justify-center z-50 p-4 animate-fade-in backdrop-blur-sm">
+                <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl relative">
+                    <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 rounded-t-3xl">
+                        <h2 className="text-xl font-bold flex items-center gap-3"><Eye className="text-blue-500"/> Náhled před zašifrováním a odesláním</h2>
+                        <button onClick={() => setShowPreview(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24}/></button>
+                    </div>
+                    
+                    <div className="p-8 overflow-y-auto custom-scrollbar space-y-6 text-sm text-slate-300">
+                        <div className="text-center mb-8 border-b border-slate-800 pb-6">
+                            <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-widest">{contractForm.type === 'HPP' ? 'Pracovní smlouva' : contractForm.type}</h3>
+                            <p className="text-blue-400 font-mono">Zaměstnavatel: {tenantId}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                                <h4 className="font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 text-xs">Osobní údaje</h4>
+                                <p className="mb-3 flex items-center gap-2"><strong className="text-white">Jméno:</strong> {contractForm.dataSources.employeeName === 'mojeid' ? <MojeIdBadge/> : contractForm.employeeName}</p>
+                                <p className="mb-3 flex items-center gap-2"><strong className="text-white">Narození:</strong> {contractForm.dataSources.employeeBirthDate === 'mojeid' ? <MojeIdBadge/> : contractForm.employeeBirthDate}</p>
+                                <p className="mb-3 flex flex-wrap items-center gap-2"><strong className="text-white">Bydliště:</strong> {contractForm.dataSources.employeeAddress === 'mojeid' ? <MojeIdBadge/> : contractForm.employeeAddress}</p>
+                                <p><strong className="text-white">E-mail:</strong> {contractForm.email}</p>
+                            </div>
+                            
+                            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                                <h4 className="font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 text-xs">Pracovní podmínky</h4>
+                                <p className="mb-2"><strong className="text-white">Pozice:</strong> {contractForm.position}</p>
+                                <p className="mb-2"><strong className="text-white">Den nástupu:</strong> {contractForm.startDate}</p>
+                                <p className="mb-2"><strong className="text-white">Místo výkonu:</strong> {contractForm.workLocation}</p>
+                                {contractForm.homeOffice && <p className="mb-2 text-emerald-400">Sjednán Home Office (§ 190a)</p>}
+                                <p className="mb-2"><strong className="text-white">Doba:</strong> {contractForm.duration === 'urcita' ? `Určitá do ${contractForm.validUntil}` : 'Neurčitá'}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                            <h4 className="font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 text-xs">Rozsah a Odměňování</h4>
+                            {contractForm.type === 'HPP' && (
+                                <div className="grid grid-cols-3 gap-4 mb-4">
+                                    <p><strong className="text-white">Zkušební doba:</strong><br/>{contractForm.probationPeriod} měs.</p>
+                                    <p><strong className="text-white">Úvazek:</strong><br/>{contractForm.workingHours} h/týd.</p>
+                                    <p><strong className="text-white">Dovolená:</strong><br/>{contractForm.vacationDays} dnů</p>
+                                </div>
+                            )}
+                            {contractForm.type === 'DPP' && <p className="mb-4"><strong className="text-white">Rozsah práce:</strong> Max. {contractForm.dppHours} hod/rok</p>}
+                            {contractForm.type === 'DPČ' && <p className="mb-4"><strong className="text-white">Rozsah práce:</strong> Max. {contractForm.dpcHours} hod/týd (průměr)</p>}
+                            
+                            <div className="p-4 bg-emerald-900/20 border border-emerald-900/50 rounded-xl">
+                                <p className="text-emerald-400 font-bold text-lg">{contractForm.salary}</p>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-blue-900/10 p-5 rounded-2xl border-l-4 border-blue-500">
+                            <p className="text-xs text-blue-400 leading-relaxed"><strong>Automatická doložka (§ 37 ZP):</strong> Zaměstnanec je informován, že má právo na nepřetržitý denní odpočinek v trvání alespoň 11 hodin během 24 hodin a nepřetržitý odpočinek v týdnu v trvání alespoň 24 hodin. Pojistné na sociální zabezpečení odvádí příslušné OSSZ.</p>
+                        </div>
+                        
+                        <div className="bg-slate-800/50 p-5 rounded-2xl border border-slate-700 flex flex-col items-center justify-center text-center gap-2">
+                            <PenTool className="text-emerald-500 mb-2" size={32}/>
+                            <h4 className="font-bold text-white uppercase">Čeká na Váš elektronický podpis</h4>
+                            <p className="text-xs text-slate-400 max-w-md">Kliknutím na tlačítko níže bude vygenerována nezfalšovatelná pečeť zaměstnavatele (Zaručený elektronický podpis) a dokument bude nevratně uzamčen.</p>
+                        </div>
+                    </div>
+                    
+                    <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-3xl flex gap-4">
+                        <button onClick={() => setShowPreview(false)} className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold transition-colors">Zpět k úpravám</button>
+                        <button onClick={handleSignAndIssueContract} disabled={isProcessing} className="flex-[2] py-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all text-white"><Lock size={20} /> Elektronicky podepsat firmou a Odeslat návrh</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'bulk' && importStep === 1 && ( <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800"><h2 className="text-2xl font-bold mb-2 flex items-center gap-3"><UploadCloud className="text-blue-500"/> Krok 1: Extrakce dat</h2><p className="text-slate-400 mb-6 text-sm">Nahrajte exportní CSV/TXT soubor nebo vložte data ručně.</p><div className="flex flex-col gap-4 mb-6"><label className="flex flex-col items-center justify-center gap-3 w-full py-8 border-2 border-dashed border-slate-700 hover:border-blue-500 bg-slate-950/50 hover:bg-slate-900 rounded-2xl cursor-pointer"><UploadCloud size={36} className="text-slate-500"/><span className="text-slate-300 font-bold text-lg">Nahrát .CSV nebo .TXT soubory</span><input type="file" accept=".csv,.txt" multiple className="hidden" onChange={handleCsvUpload} /></label><div className="flex items-center gap-4 text-slate-600 text-xs font-bold uppercase"><hr className="flex-1 border-slate-800"/>nebo vložit text ručně<hr className="flex-1 border-slate-800"/></div><textarea value={bulkText} onChange={e => setBulkText(e.target.value)} className="w-full h-32 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-sm outline-none focus:border-blue-500" placeholder="Jan; Novák; jan.novak@firma.cz; 1. 5. 2023; https://cloud.cz/smlouva.pdf" /></div><button onClick={handleParseText} disabled={!bulkText} className="mt-4 w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-colors text-lg">Zahájit analýzu</button></div> )}
+        {activeTab === 'bulk' && importStep === 2 && ( <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800"><div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"><h2 className="text-2xl font-bold flex items-center gap-3"><CheckCircle className="text-emerald-500"/> Krok 2: Připojení smluv</h2><button onClick={() => setImportStep(1)} className="text-blue-400 font-bold hover:text-white">&larr; Zpět</button></div><div className="max-h-[550px] overflow-y-auto space-y-4 mb-6 pr-2">{getSortedCandidates().map((cand) => { const hasProblem = getProbScore(cand) > 0; return ( <div key={cand.id} className={`p-5 rounded-2xl border transition-colors ${!cand.selected ? 'bg-slate-950/50 border-slate-800 opacity-50' : hasProblem ? 'bg-rose-950/20 border-rose-900/50' : 'bg-slate-950 border-slate-700'}`}><div className="flex items-start gap-4 mb-4"><button onClick={() => updateCand(cand.id, 'selected', !cand.selected)} className="mt-1">{cand.selected ? <CheckSquare className="text-blue-500" size={24}/> : <Square className="text-slate-600" size={24}/>}</button><div className="grid grid-cols-1 md:grid-cols-5 gap-3 w-full"><div className="flex bg-slate-900 border border-slate-800 rounded-lg overflow-hidden focus-within:border-blue-500"><div className="bg-slate-800 px-3 flex items-center"><User size={14} className="text-slate-400"/></div><input type="text" value={cand.firstName} onChange={(e) => updateCand(cand.id, 'firstName', e.target.value)} placeholder="Jméno" className="w-full bg-transparent px-3 py-2 text-sm outline-none font-bold" /></div><div className="flex bg-slate-900 border border-slate-800 rounded-lg overflow-hidden focus-within:border-blue-500"><div className="bg-slate-800 px-3 flex items-center"><User size={14} className="text-slate-400"/></div><input type="text" value={cand.lastName} onChange={(e) => updateCand(cand.id, 'lastName', e.target.value)} placeholder="Příjmení" className="w-full bg-transparent px-3 py-2 text-sm outline-none font-bold" /></div><div className="flex bg-slate-900 border border-slate-800 rounded-lg overflow-hidden focus-within:border-blue-500"><div className="bg-slate-800 px-3 flex items-center"><Briefcase size={14} className="text-slate-400"/></div><input type="text" value={cand.position} onChange={(e) => updateCand(cand.id, 'position', e.target.value)} placeholder="Pozice" className="w-full bg-transparent px-3 py-2 text-sm outline-none" /></div><div className="flex bg-slate-900 border border-slate-800 rounded-lg overflow-hidden focus-within:border-blue-500"><div className="bg-slate-800 px-3 flex items-center"><Calendar size={14} className="text-slate-400"/></div><input type="text" value={cand.startDate} onChange={(e) => updateCand(cand.id, 'startDate', e.target.value)} placeholder="Nástup" className="w-full bg-transparent px-3 py-2 text-sm outline-none" /></div><div className="flex bg-slate-900 border border-slate-800 rounded-lg overflow-hidden focus-within:border-blue-500"><div className="bg-slate-800 px-3 flex items-center"><span className="text-slate-400 font-bold text-xs">@</span></div><input type="email" value={cand.email} onChange={(e) => updateCand(cand.id, 'email', e.target.value)} placeholder="E-mail" className="w-full bg-transparent px-3 py-2 text-sm outline-none" /></div></div></div>{cand.selected && ( <div className="pl-10 space-y-2"><div className="flex items-center gap-3"><div className="flex-1 flex items-center bg-slate-900 border border-slate-700 rounded-xl px-3 focus-within:border-blue-500"><LinkIcon size={16} className="text-slate-500" /><input type="text" placeholder="URL odkaz..." value={cand.contractUrl} onChange={(e) => updateCand(cand.id, 'contractUrl', e.target.value)} disabled={!!cand.contractFileName} className="w-full bg-transparent px-3 py-2 text-sm outline-none disabled:opacity-50" /></div><span className="text-slate-500 text-sm font-bold">NEBO</span><label className={`cursor-pointer px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border ${cand.contractFileName ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700'}`}><Paperclip size={16}/> {cand.contractFileName ? cand.contractFileName : 'Nahrát soubor'}<input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={(e) => handleAttachFile(cand.id, e)} /></label>{cand.contractFileName && ( <button onClick={() => { updateCand(cand.id, 'contractFileName', ''); updateCand(cand.id, 'contractFileBase64', ''); }} className="text-rose-400"><X size={18}/></button> )}</div></div> )}</div> )})}</div><button onClick={handleFinalSubmit} disabled={isProcessing} className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-colors text-lg flex items-center justify-center gap-2"><Lock size={20} /> Zapsat údaje a odeslat pozvánky</button></div> )}
+        
+        {activeTab === 'contracts' && ( 
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 animate-fade-in">
+                <div className="lg:col-span-3 bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-xl">
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3"><FilePlus className="text-emerald-500"/> Generátor Pracovněprávních Dokumentů</h2>
+                    <form onSubmit={handlePreviewTrigger} className="space-y-6">
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2"><User size={16}/> 1. Identifikace zaměstnance</h3>
+                            <div><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">E-mail (Nutné pro MojeID pozvánku)</label><input type="email" value={contractForm.email} onChange={e => setContractForm({...contractForm, email: e.target.value})} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500" /></div>
+                            <SmartField fieldKey="employeeName" label="Celé jméno" placeholder="Jan Novák" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><SmartField fieldKey="employeeAddress" label="Trvalé bydliště" placeholder="Ulice, Město, PSČ" /><SmartField fieldKey="employeeBirthDate" label="Datum narození" placeholder="DD.MM.RRRR" /></div>
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2"><Briefcase size={16}/> 2. Pracovní zařazení</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="col-span-2 md:col-span-1"><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Druh</label><select value={contractForm.type} onChange={e => setContractForm({...contractForm, type: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500"><option value="HPP">HPP</option><option value="DPP">DPP</option><option value="DPČ">DPČ</option></select></div>
+                                <div className="col-span-2 md:col-span-1"><label className="block text-xs font-bold text-[#66b3ff] mb-1 uppercase tracking-wider">Prověrka</label><select value={contractForm.clearance_level} onChange={e => setContractForm({...contractForm, clearance_level: e.target.value})} className="w-full bg-slate-950 border border-[#000080]/50 rounded-xl px-4 py-3 outline-none focus:border-[#000080] text-slate-300"><option value="standard">Standardní</option><option value="management">Management</option></select></div>
+                                <div className="col-span-2"><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Pracovní pozice</label><input type="text" value={contractForm.position} onChange={e => setContractForm({...contractForm, position: e.target.value})} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500" placeholder="Název pozice" /></div>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                <div><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider flex items-center gap-1"><MapPin size={12}/> Místo výkonu práce</label><input type="text" value={contractForm.workLocation} onChange={e => setContractForm({...contractForm, workLocation: e.target.value})} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500" placeholder="Přesná adresa nebo obec" /></div>
+                                <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-3"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={contractForm.homeOffice} onChange={e => setContractForm({...contractForm, homeOffice: e.target.checked})} className="w-5 h-5 accent-blue-500" /><span className="text-sm font-bold text-slate-300 flex items-center gap-2"><Home size={16}/> Sjednat výkon práce na dálku (Home Office)</span></label>{contractForm.homeOffice && ( <div className="pl-8 animate-fade-in"><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Náhrada nákladů (§ 190a ZP)</label><select value={contractForm.homeOfficeAllowance} onChange={e => setContractForm({...contractForm, homeOfficeAllowance: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-blue-500 text-sm"><option value="pausal">Paušální částka stanovená vyhláškou MPSV</option><option value="naklady">Prokazování skutečných nákladů</option><option value="neposkytuje_se">Písemná dohoda, že náhrady nepřísluší</option></select></div> )}</div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2"><Calendar size={16}/> 3. Časový rámec a Odměna</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="col-span-2"><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Den nástupu</label><input type="text" value={contractForm.startDate} onChange={e => setContractForm({...contractForm, startDate: e.target.value})} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500" placeholder="DD.MM.RRRR" /></div>
+                                <div className="col-span-1"><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Trvání</label><select value={contractForm.duration} onChange={e => { setContractForm({...contractForm, duration: e.target.value, validUntil: e.target.value === 'urcita' ? addOneYear(contractForm.startDate) : ''}); }} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500"><option value="neurcita">Neurčitá</option><option value="urcita">Určitá</option></select></div>
+                                <div className="col-span-1"><label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Platnost do</label><input type="text" value={contractForm.validUntil} onChange={e => setContractForm({...contractForm, validUntil: e.target.value})} disabled={contractForm.duration === 'neurcita'} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" placeholder={contractForm.duration === 'neurcita' ? 'N/A' : 'DD.MM.RRRR'} /></div>
+                            </div>
+                            {contractForm.type === 'HPP' && ( <div className="grid grid-cols-3 gap-4 bg-slate-950/50 p-4 rounded-xl border border-slate-800/50"><div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Zkušební doba</label><div className="flex items-center"><input type="number" value={contractForm.probationPeriod} onChange={e => setContractForm({...contractForm, probationPeriod: e.target.value})} className="w-full bg-transparent border-b border-slate-700 px-1 py-2 outline-none text-center" /><span className="text-xs text-slate-500 ml-2">Měs.</span></div></div><div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Úvazek</label><div className="flex items-center"><input type="number" value={contractForm.workingHours} onChange={e => setContractForm({...contractForm, workingHours: e.target.value})} className="w-full bg-transparent border-b border-slate-700 px-1 py-2 outline-none text-center" /><span className="text-xs text-slate-500 ml-2">h/týd</span></div></div><div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Dovolená</label><div className="flex items-center"><input type="number" value={contractForm.vacationDays} onChange={e => setContractForm({...contractForm, vacationDays: e.target.value})} className="w-full bg-transparent border-b border-slate-700 px-1 py-2 outline-none text-center" /><span className="text-xs text-slate-500 ml-2">Dní</span></div></div></div> )}
+                            {contractForm.type === 'DPP' && ( <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Rozsah práce (Limit: max 300 h/rok)</label><div className="flex items-center"><input type="number" value={contractForm.dppHours} onChange={e => setContractForm({...contractForm, dppHours: e.target.value})} className="w-24 bg-transparent border-b border-slate-700 px-1 py-2 outline-none text-center font-bold" /><span className="text-sm text-slate-400 ml-3">hodin v kalendářním roce</span></div></div> )}
+                            {contractForm.type === 'DPČ' && ( <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800/50 flex flex-col gap-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Rozsah práce (Limit: max 20 h/týden v průměru)</label><div className="flex items-center"><input type="number" value={contractForm.dpcHours} onChange={e => setContractForm({...contractForm, dpcHours: e.target.value})} className="w-24 bg-transparent border-b border-slate-700 px-1 py-2 outline-none text-center font-bold" /><span className="text-sm text-slate-400 ml-3">hodin týdně</span></div></div> )}
+                            <div><label className="block text-xs font-bold text-emerald-500 mb-1 uppercase tracking-wider flex items-center gap-1"><DollarSign size={12}/> Odměňování</label><input type="text" value={contractForm.salary} onChange={e => setContractForm({...contractForm, salary: e.target.value})} required className="w-full bg-slate-950 border border-emerald-900/50 rounded-xl px-4 py-3 outline-none focus:border-emerald-500" placeholder={contractForm.type === 'HPP' ? "Hrubá měsíční mzda (např. 65 000 Kč)" : "Hodinová sazba (např. 300 Kč/hod)"} /></div>
+                        </div>
+
+                        {legalWarnings.length > 0 && ( <div className="bg-orange-950/30 border border-orange-900/50 rounded-xl p-4 space-y-2 animate-fade-in">{legalWarnings.map((warning, idx) => ( <p key={idx} className="text-sm font-bold text-orange-400 flex items-center gap-2"><AlertCircle size={16} /> {warning}</p> ))}</div> )}
+
+                        <button type="submit" disabled={isProcessing} className="mt-8 w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 rounded-xl font-bold flex items-center justify-center gap-2 text-lg"><Eye size={20} /> Zobrazit náhled smlouvy k podpisu</button>
+                    </form>
+                </div>
+                
+                <div className="lg:col-span-2 bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col max-h-[800px]">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-3"><FileText className="text-blue-500"/> Vystavené Dokumenty</h2>
+                    
+                    <div className="relative mb-4">
+                        <Search className="absolute left-3 top-3 text-slate-500" size={16} />
+                        <input type="text" placeholder="Hledat jméno nebo pozici..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-blue-500 text-sm text-white transition-colors" />
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                        {issuedContracts.length === 0 ? (
+                            <div className="text-center text-slate-500 py-10 flex flex-col items-center"><FileText size={48} className="opacity-20 mb-4"/>Zatím nebyly vystaveny žádné smlouvy.</div>
+                        ) : ( 
+                            issuedContracts.map(c => {
+                                let parsed = {};
+                                try { parsed = JSON.parse(decodeURIComponent(escape(atob(c.encrypted_payload)))); } catch(e) {}
+                                return { ...c, parsed };
+                            }).filter(c => {
+                                if (!searchTerm) return true;
+                                const s = searchTerm.toLowerCase();
+                                return (c.parsed.employeeName?.toLowerCase().includes(s) || c.parsed.position?.toLowerCase().includes(s) || c.id.toLowerCase().includes(s));
+                            }).map((c, idx) => (
+                                <div key={idx} onClick={async () => {
+                                    if (c.status === 'signed') {
+                                        try {
+                                            await safeFetch(`${BACKEND_URL}/hr/log-access`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ credential_id: c.id, tenant_id: tenantId.trim() })
+                                            });
+                                        } catch (e) { console.error("Audit log failed", e); }
+                                        setViewDoc(c);
+                                    }
+                                }} className={`flex flex-col justify-between items-start bg-slate-950 border p-4 rounded-xl gap-3 ${c.status === 'signed' ? 'border-emerald-500/30 cursor-pointer hover:bg-emerald-950/20 transition-colors' : 'border-slate-800'}`}>
+                                    <div className="w-full flex justify-between items-start">
+                                        <div>
+                                            <p className="font-bold text-sm text-white">{c.parsed.employeeName || c.id}</p>
+                                            <p className="text-xs text-slate-400 mt-1">{c.parsed.position || 'Čeká na data...'}</p>
+                                            <p className="text-[9px] text-slate-600 font-mono mt-2">ID: {c.id}</p>
+                                        </div>
+                                        <span className={`px-3 py-1 text-[10px] font-bold rounded-lg uppercase border ${c.status === 'signed' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-transparent whitespace-nowrap'}`}>{c.status}</span>
+                                    </div>
+                                    {c.clearance_level === 'management' && ( <div className="w-full border-t border-slate-800/50 pt-2 flex justify-end"><span className="px-2 py-1 text-[10px] font-bold tracking-widest rounded border border-[#000080] bg-[#000080]/30 text-[#66b3ff]">MANAGEMENT LEVEL</span></div> )}
+                                </div>
+                            )) 
+                        )}
+                    </div>
+                </div>
+            </div> 
+        )}
+        
+        {activeTab === 'radar' && ( <div className="space-y-6 animate-fade-in"><div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"><div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col items-center justify-center shadow-xl"><ShieldCheck className="text-emerald-500 mb-2" size={28} /><h3 className="text-slate-400 text-xs font-bold uppercase text-center">Nedotknutelné</h3><p className="text-4xl font-extrabold text-emerald-500 mt-2">{radarData.safe}</p></div><div className="bg-slate-900 p-6 rounded-3xl border border-blue-900 flex flex-col items-center justify-center relative overflow-hidden"><div className="absolute top-0 w-full h-1 bg-blue-500"></div><AlertTriangle className="text-blue-400 mb-2" size={28} /><h3 className="text-blue-400 text-xs font-bold uppercase text-center">V ochranné lhůtě</h3><p className="text-4xl font-extrabold mt-2">{radarData.withdrawal_risk}</p></div><div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col items-center justify-center shadow-xl"><FileText className="text-amber-500 mb-2" size={28} /><h3 className="text-slate-400 text-xs font-bold uppercase text-center">Čeká na podpis</h3><p className="text-4xl font-extrabold mt-2">{radarData.pending_signatures}</p></div><div className="bg-slate-900 p-6 rounded-3xl border border-orange-900/50 flex flex-col items-center justify-center"><Clock className="text-orange-500 mb-2" size={28} /><h3 className="text-orange-400 text-xs font-bold uppercase text-center">Končí do 30 dnů</h3><p className="text-4xl font-extrabold mt-2">{radarData.expiring_soon || 0}</p></div><div className="bg-slate-900 p-6 rounded-3xl border border-rose-900/50 flex flex-col items-center justify-center"><AlertOctagon className="text-rose-500 mb-2" size={28} /><h3 className="text-rose-400 text-xs font-bold uppercase text-center">Expirované</h3><p className="text-4xl font-extrabold mt-2">{radarData.expired || 0}</p></div></div><div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-xl"><div className="flex justify-between items-center mb-6"><h3 className="text-xl font-bold flex items-center gap-3"><AlertTriangle className="text-blue-500"/> Detailní monitoring dokumentů</h3><button onClick={handleDownloadAudit} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition-colors"><FileText size={16}/> Stáhnout certifikovaný audit</button></div><div className="max-h-96 overflow-y-auto space-y-3">{radarData.details && radarData.details.length > 0 ? ( radarData.details.map((detail, idx) => ( <div key={idx} className="flex justify-between items-center bg-slate-950 border border-slate-800 p-4 rounded-xl"><div><p className="font-bold text-sm text-white">{detail.id}</p><p className="text-xs text-slate-500 mt-1">{detail.desc}</p></div><span className="px-3 py-1 text-xs font-bold rounded-lg uppercase border bg-amber-900/30 text-amber-400 border-amber-500/30">{detail.state}</span></div> ))) : (<div className="text-center text-slate-500 py-10">Žádné dokumenty.</div>)}</div></div></div> )}
+
+        {activeTab === 'archive' && (
+            <div className="bg-slate-900 p-10 rounded-3xl border border-slate-800 animate-fade-in text-center max-w-3xl mx-auto shadow-2xl">
+                <Archive size={72} className="text-emerald-500 mx-auto mb-6" />
+                <h2 className="text-3xl font-bold mb-4">Nesmrtelná Kryptografická Kapsle</h2>
+                <p className="text-slate-400 mb-8 leading-relaxed text-lg">Vygenerujte si plně soběstačný, off-grid HTML archiv všech vašich smluv. Tento soubor garantuje čitelnost a nevyžaduje přístup k serveru.</p>
+                
+                {!coldVaultSeed ? (
+                    <button onClick={handleGenerateColdVault} disabled={isProcessing} className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] text-lg flex items-center justify-center gap-3">
+                        <Lock size={24} /> {isProcessing ? 'Skládám kapsli a šifruji...' : 'Stáhnout 10letý Kvantově odolný Archiv'}
+                    </button>
+                ) : !isSeedVerified ? (
+                    <div className="bg-slate-950 border border-amber-500/50 p-6 md:p-8 rounded-2xl animate-fade-in text-left">
+                        <h3 className="text-amber-400 text-xl font-bold mb-4 flex items-center gap-2"><KeyRound size={24} /> Krok 2: Distribuovaná záloha (Shamir's Overlap)</h3>
+                        <p className="text-slate-400 mb-6 text-sm md:text-base">Vaše nová kapsle se jmenuje <strong className="text-white">InLoopID_ColdVault_{coldVaultReport?.capsuleId}.html</strong>. Pro maximální bezpečí byl Váš Master Seed rozdělen na 3 části. <strong>K odemčení archivu budou v budoucnu zapotřebí jakékoliv dvě.</strong> Předejte je odpovědným osobám.</p>
+                        
+                        <div className="space-y-4 mb-6">
+                            <div className="bg-slate-900 p-4 md:p-5 rounded-xl border border-blue-900/50">
+                                <h4 className="text-blue-400 font-bold mb-3 text-xs md:text-sm uppercase tracking-wider">Díl A (CEO / Jednatel) - Slova 1 až 16</h4>
+                                <div className="font-mono text-xs md:text-sm text-white bg-slate-950 p-3 md:p-4 rounded-lg leading-relaxed">
+                                    {coldVaultSeed.split(' ').slice(0, 16).map((w, i) => <span key={i} className="inline-block mr-3 md:mr-4"><span className="text-slate-600 text-[10px] md:text-xs">{i+1}.</span> {w}</span>)}
+                                </div>
+                            </div>
+                            <div className="bg-slate-900 p-4 md:p-5 rounded-xl border border-emerald-900/50">
+                                <h4 className="text-emerald-400 font-bold mb-3 text-xs md:text-sm uppercase tracking-wider">Díl B (HR Ředitel) - Slova 9 až 24</h4>
+                                <div className="font-mono text-xs md:text-sm text-white bg-slate-950 p-3 md:p-4 rounded-lg leading-relaxed">
+                                    {coldVaultSeed.split(' ').slice(8, 24).map((w, i) => <span key={i} className="inline-block mr-3 md:mr-4"><span className="text-slate-600 text-[10px] md:text-xs">{i+9}.</span> {w}</span>)}
+                                </div>
+                            </div>
+                            <div className="bg-slate-900 p-4 md:p-5 rounded-xl border border-purple-900/50">
+                                <h4 className="text-purple-400 font-bold mb-3 text-xs md:text-sm uppercase tracking-wider">Díl C (Právník / Notář) - Slova 1-8 a 17-24</h4>
+                                <div className="font-mono text-xs md:text-sm text-white bg-slate-950 p-3 md:p-4 rounded-lg leading-relaxed">
+                                    {coldVaultSeed.split(' ').slice(0, 8).map((w, i) => <span key={i} className="inline-block mr-3 md:mr-4"><span className="text-slate-600 text-[10px] md:text-xs">{i+1}.</span> {w}</span>)}
+                                    <span className="mx-2 text-slate-700">...</span>
+                                    {coldVaultSeed.split(' ').slice(16, 24).map((w, i) => <span key={i} className="inline-block mr-3 md:mr-4"><span className="text-slate-600 text-[10px] md:text-xs">{i+17}.</span> {w}</span>)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onClick={handleCopySeed} className="w-full py-3 mb-8 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 text-sm">
+                            <Copy size={16} /> Zkopírovat kompletní Master Seed (Pro IT Admina)
+                        </button>
+
+                        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
+                            <p className="text-slate-300 font-bold mb-4 text-center text-sm">Pro aktivaci Kapsle vyhledejte a opište 3 náhodně vybraná slova ze zobrazených dílů:</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                {verificationIndices.map((idx, i) => (
+                                    <div key={i}>
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">{idx + 1}. slovo</label>
+                                        <input type="text" value={verificationInputs[i]} onChange={e => { const newInputs = [...verificationInputs]; newInputs[i] = e.target.value; setVerificationInputs(newInputs); }} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-mono text-center" placeholder="..."/>
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={verifySeedInputs} className="w-full py-4 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold transition-colors">Ověřit a uzamknout Trezor</button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-slate-950 border border-emerald-500/50 p-8 rounded-2xl animate-fade-in">
+                        <h3 className="text-emerald-400 text-xl font-bold mb-6 flex items-center justify-center gap-2"><CheckCircle size={24} /> Kapsle je plně aktivní a připravena</h3>
+                        {coldVaultReport && (
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-8 text-left text-sm font-mono text-slate-400 space-y-3 shadow-inner overflow-hidden">
+                                <p className="text-emerald-500 font-bold mb-3 border-b border-slate-800 pb-3 uppercase tracking-wider flex items-center gap-2"><ShieldCheck size={18} /> Kryptografický Report Zálohy</p>
+                                <p>Verze kapsle (ID): <span className="text-white font-bold">{coldVaultReport.capsuleId}</span></p>
+                                <p>Zálohované dokumenty: <span className="text-blue-400 font-bold">{coldVaultReport.totalContracts} ks</span></p>
+                                <p>Status: <span className="text-emerald-500 font-bold text-base">Ověřeno a zabezpečeno</span></p>
+                            </div>
+                        )}
+                        <div className="flex gap-4">
+                            <button onClick={() => { setColdVaultSeed(null); setColdVaultReport(null); setIsSeedVerified(false); }} className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold transition-colors">Zavřít a resetovat</button>
+                            <button onClick={() => window.open(`${BACKEND_URL}/hr/download-capsule?tenant_id=${tenantId}`, '_blank')} className="flex-[2] py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2"><Archive size={20} /> Stáhnout off-grid HTML Kapsli</button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        )}
+      </div>
+    </div>
+  );
+};

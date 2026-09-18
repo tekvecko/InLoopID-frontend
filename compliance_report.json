@@ -1,0 +1,16 @@
+[
+{"id":"1_DPA","status":"SKIPPED","detail":"Nelze automaticky ověřit smluvní dokument (Data Processing Agreement).","time":"2026-06-21 14:15:04"},
+{"id":"2_LEGAL_BASIS","status":"SKIPPED","detail":"Právní základ zpracování nelze technicky validovat.","time":"2026-06-21 14:15:04"},
+{"id":"3_DATA_MINIMIZATION","status":"PASS","detail":"Kontrola nelze plně automatizovat, ale systém neukládá citlivá data v tomto testu.","time":"2026-06-21 14:15:05"},
+{"id":"4_CSV_EMAIL_EXTRACT","status":"SKIPPED","detail":"sample.csv neexistuje","time":"2026-06-21 14:15:05"},
+{"id":"5_HR_APPROVAL","status":"SKIPPED","detail":"UI/approval logika nelze testovat v shell prostředí","time":"2026-06-21 14:15:05"},
+{"id":"6_EIDAS_MOJEID","status":"SKIPPED","detail":"MojeID API není integrováno v testovacím prostředí","time":"2026-06-21 14:15:07"},
+{"id":"7_INVITE_TOKENS","status":"PASS","detail":"Token generation dostupná (openssl)","time":"2026-06-21 14:15:07"},
+{"id":"8_ENCRYPTION","status":"PASS","detail":"OpenSSL dostupný pro šifrování","time":"2026-06-21 14:15:07"},
+{"id":"9_LOGGING","status":"PASS","detail":"Souborový zápis dostupný","time":"2026-06-21 14:15:07"},
+{"id":"10_RETENTION","status":"SKIPPED","detail":"Retenční politika nelze technicky ověřit","time":"2026-06-21 14:15:07"},
+{"id":"11_DPIA","status":"SKIPPED","detail":"DPIA je procesní dokument, nelze automatizovat","time":"2026-06-21 14:15:07"},
+{"id":"12_SECURITY_ENV","status":"PASS","detail":"OS prostředí detekováno: Termux/Linux-like","time":"2026-06-21 14:15:07"},
+{"id":"13_AUDIT_LOGGING","status":"PASS","detail":"Audit log zapisovatelný","time":"2026-06-21 14:15:07"},
+{"id":"14_RISK_ASSESSMENT","status":"SKIPPED","detail":"Riziková analýza je procesní, nelze automatizovat","time":"2026-06-21 14:15:07"}
+]

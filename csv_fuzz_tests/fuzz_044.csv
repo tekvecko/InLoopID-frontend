@@ -1,0 +1,11 @@
+EmployeeID;FirstName;LastName;Email;Role
+3521;Petr;Němcová;jana.král@vendor.io;Vendor
+1169	Petra
+5188	Anna	Svoboda	user@firma	HR
+8547;Eva;Král;petra.svoboda@company.com;Intern;EXTRA_COLUMN_IoBSQ
+5588	Lucie	Novák	tomáš.němcová@external.net	Manager
+7291,Karel,Svoboda,no.domain@,Engineer
+7381|Jana|Malá|missing-at.com|Engineer
+2527;Jan;Procházka;anna.bílá@seznam.cz;HR
+4043,Martin,Král,no.domain@,Intern
+5746|Petra|Malá|jana.dvořák@firma.cz|Engineer

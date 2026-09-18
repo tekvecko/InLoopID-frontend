@@ -1,0 +1,13 @@
+EmployeeID|FirstName|LastName|Email|Role
+1089|Anna|Malá|tomáš.král@external.net|Vendor
+9875|Jana|Novák|eva.procházka@seznam.cz|HR
+1291|Petr|Dvořák|tomáš.novák@external.net|Vendor
+7552|Tomáš|Král|lucie.novák@external.net|HR
+9021|Jan|Procházka|broken@domain|Intern
+1888|Martin|Malá|jan.procházka@firma.cz|Engineer
+8725|Tomáš|Němcová|karel.procházka@gmail.com|HR
+1974|Anna|Malá|tomáš.dvořák@firma.cz|Vendor
+8165|Tomáš|Král|eva.svoboda@external.net|Vendor
+8079|Jan|Svoboda|anna.němcová@seznam.cz|Intern
+8079|Jan|Svoboda|anna.němcová@seznam.cz|Intern
+6836|Anna|Bílá|petra.němcová@seznam.cz|Manager

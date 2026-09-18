@@ -1,0 +1,187 @@
+1,executive,Executive Summary
+2,executive,Vize
+3,executive,Mise
+4,executive,Hodnoty
+5,executive,Strategické cíle
+6,executive,Historie projektu
+7,executive,Roadmap
+8,executive,Milníky
+9,executive,KPI
+10,executive,Přehled produktu
+11,business,Business model
+12,business,Lean Canvas
+13,business,Business Model Canvas
+14,business,Value Proposition
+15,business,SWOT
+16,business,PESTLE
+17,business,Tržní analýza
+18,business,TAM
+19,business,SAM
+20,business,SOM
+21,business,Segmentace zákazníků
+22,business,Persony
+23,business,Konkurenční analýza
+24,business,Cenová strategie
+25,business,ROI
+26,business,Go-To-Market
+27,business,Sales strategie
+28,business,Partnerský program
+29,business,Investorská strategie
+30,product,Přehled funkcí
+31,product,Workflow
+32,product,Uživatelské role
+33,product,Životní cyklus zaměstnance
+34,product,Životní cyklus dokumentu
+35,product,Schvalovací procesy
+36,product,Automatizace
+37,product,AI funkce
+38,product,Notifikace
+39,product,Dashboardy
+40,product,Reporty
+41,product,Audit
+42,product,Exporty
+43,product,Importy
+44,architecture,Přehled architektury
+45,architecture,Backend
+46,architecture,Frontend
+47,architecture,API Gateway
+48,architecture,Databáze
+49,architecture,Datový model
+50,architecture,Mikroslužby
+51,architecture,Security architektura
+52,architecture,Scalability návrh
+53,architecture,Load balancing
+54,architecture,Caching vrstva
+55,architecture,Message queue
+56,architecture,Event-driven design
+57,architecture,State management
+58,architecture,Failover strategie
+59,architecture,High availability
+60,architecture,Cloud deployment
+61,security,Bezpečnostní model
+62,security,Autentizace
+63,security,Autorizace
+64,security,Role-based access control
+65,security,OAuth2
+66,security,JWT
+67,security,Šifrování dat
+68,security,Transport Layer Security
+69,security,Audit logy
+70,security,Penetrační testy
+71,security,Threat modeling
+72,security,OWASP
+73,security,GDPR compliance
+74,security,Data retention
+75,security,Backup strategie
+76,gdpr,GDPR přehled
+77,gdpr,Zpracování osobních údajů
+78,gdpr,Práva subjektů údajů
+79,gdpr,Consent management
+80,gdpr,Data anonymizace
+81,gdpr,Data pseudonymizace
+82,gdpr,Right to be forgotten
+83,gdpr,Data export
+84,gdpr,Incident reporting
+85,integrations,API integrace
+86,integrations,Webhooky
+87,integrations,ERP integrace
+88,integrations,CRM integrace
+89,integrations,Email integrace
+90,integrations,SMS gateway
+91,integrations,OAuth integrace
+92,integrations,Third-party services
+93,integrations,Rate limiting
+94,integrations,API versioning
+95,api,REST API
+96,api,GraphQL
+97,api,OpenAPI spec
+98,api,Endpoint design
+99,api,Error handling
+100,api,Pagination
+101,ux,UX principy
+102,ux,UI design system
+103,ux,Wireframy
+104,ux,Prototypy
+105,ux,Design tokens
+106,ux,Accessibility
+107,ux,User journeys
+108,ux,UX research
+109,ux,A/B testování
+110,ux,Feedback systém
+111,ux,Analytics
+112,ux,Heatmapy
+113,ux,Mobile UX
+114,ux,Responsive design
+115,ux,Dark mode design
+116,ux,Design guidelines
+117,ux,Komponenty UI
+118,ux,Design system architektura
+119,ux,UX metriky
+120,ux,Konverze
+121,devops,CI/CD
+122,devops,Git workflow
+123,devops,Docker
+124,devops,Kubernetes
+125,devops,Deployment strategie
+126,devops,Monitoring
+127,devops,Logging
+128,devops,Alerting
+129,devops,Infrastructure as Code
+130,devops,Terraform
+131,devops,Ansible
+132,devops,Scaling
+133,devops,Zero downtime deploy
+134,devops,Rollback strategie
+135,devops,Performance tuning
+136,testing,Unit testy
+137,testing,Integration testy
+138,testing,E2E testy
+139,testing,Load testing
+140,testing,Security testing
+141,testing,Test automation
+142,testing,Test coverage
+143,testing,Mockování
+144,testing,Test strategie
+145,testing,QA proces
+146,admin,Admin panel
+147,admin,User management
+148,admin,Role management
+149,admin,System konfigurace
+150,admin,Audit admin
+151,finance,Finanční model
+152,finance,Cost struktura
+153,finance,Revenue streams
+154,finance,Profit analýza
+155,finance,Break-even point
+156,finance,Budget plánování
+157,finance,Cashflow
+158,finance,Investiční návratnost
+159,finance,Riziková analýza
+160,finance,Finanční reporting
+161,marketing,Marketing strategie
+162,marketing,Branding
+163,marketing,SEO strategie
+164,marketing,Content marketing
+165,marketing,Social media
+166,marketing,Email kampaně
+167,marketing,PPC reklama
+168,marketing,Lead generation
+169,marketing,Conversion funnel
+170,marketing,Marketing analytika
+171,support,Helpdesk
+172,support,Ticketing systém
+173,support,Knowledge base
+174,support,SLAs
+175,support,Customer success
+176,support,Chatbot support
+177,support,Incident management
+178,support,Feedback loop
+179,support,Escalation proces
+180,support,Support analytika
+181,investors,Pitch deck
+182,investors,Valuace
+183,investors,Equity struktura
+184,investors,Due diligence
+185,investors,Investor reporting
+186,appendix,Glosář
+187,appendix,Reference a zdroje

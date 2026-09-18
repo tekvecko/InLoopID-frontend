@@ -1,0 +1,16 @@
+EmployeeID,FirstName,LastName,Email,Role
+1282,Petr,Malá,lucie.svoboda@seznam.cz,HR
+3437,Karel,Král,jan.bílá@company.com,Vendor
+6359,Martin,Dvořák,martin.procházka@firma.cz,HR
+2246,Eva,Novák,lucie.procházka@gmail.com,Manager
+7674,Martin,Malá,lucie.němcová@company.com,Engineer
+9844,Eva,Němcová,karel.bílá@vendor.io,Intern
+7987,Petr,Dvořák,tomáš.svoboda@vendor.io,Engineer
+1285,Petr,Svoboda,anna.novák@firma.cz,Manager
+1285,Petr,Svoboda,anna.novák@firma.cz,Manager
+5715,Martin,Němcová,karel.procházka@gmail.com,Vendor
+6508,Eva,Svoboda,jana.král@firma.cz,Engineer
+1822,Anna
+1822,Anna
+5422,Petr,Král,user@firma,Manager,EXTRA_COLUMN_Jnivx
+8941,Jan,Král,jan.král@external.net,Engineer,EXTRA_COLUMN_ikEQt

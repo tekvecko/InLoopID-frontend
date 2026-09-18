@@ -1,0 +1,12 @@
+emp_id,fname,lname,email_address,dept
+3037,Martin,Novák,petra.bílá@external.net,Vendor,EXTRA_COLUMN_fopHA
+8294,Petra,Procházka,karel.král@vendor.io,Intern
+6958,Lucie,Svoboda,anna.bílá@gmail.com,HR
+7013,Petra,Procházka,@missinguser.cz,Intern
+7013,Petra,Procházka,@missinguser.cz,Intern
+2779,Petra,Procházka,petr.malá@vendor.io,Manager
+9594,Petra,Malá,tomáš.král@firma.cz,Intern
+1779,Petra,Procházka,,Vendor,EXTRA_COLUMN_TJZpB
+1779,Petra,Procházka,,Vendor,EXTRA_COLUMN_TJZpB
+3720,Lucie,Král,broken@domain,Engineer
+6086,Eva,Malá,petr.král@firma.cz,HR

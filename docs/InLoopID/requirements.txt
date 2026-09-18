@@ -1,0 +1,9 @@
+mkdocs
+mkdocs-material
+mkdocs-mermaid2-plugin
+pymdown-extensions
+jinja2
+pyyaml
+rich
+click
+markdown

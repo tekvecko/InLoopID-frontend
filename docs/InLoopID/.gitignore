@@ -1,0 +1,7 @@
+.cache
+build
+output
+exports
+tmp
+*.pyc
+__pycache__

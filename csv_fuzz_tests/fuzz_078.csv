@@ -1,0 +1,17 @@
+ID,Name,Surname,Mail,Position
+9949,Jan,Dvořák,anna.král@external.net,Vendor
+9595,Anna,Bílá,martin.svoboda@firma.cz,Manager
+3552,Tomáš,Novák,karel.novák@seznam.cz,Intern
+6357,Anna,Malá,jan.dvořák@firma.cz,Intern
+7908,,Malá,lucie.král@gmail.com,Engineer,EXTRA_COLUMN_oABUe
+9882,Anna,Procházka,no.domain@,Vendor
+4612,Petra,Novák,jan.novák@vendor.io,Intern,EXTRA_COLUMN_YrcrK
+1895,Lucie,Dvořák,eva.malá@external.net,HR
+5300,Jana,Němcová,petr.procházka@external.net,HR,EXTRA_COLUMN_SnTwc
+6545,Jan,Novák,invalid-email,HR
+9430,Petra,Němcová,anna.procházka@external.net,Vendor
+2677,Jan,Král,petra.němcová@vendor.io,Engineer
+7789,Tomáš,Novák,tomáš.němcová@gmail.com,HR
+2112,Lucie,Němcová,tomáš.malá@company.com,Manager
+6807,Jan,Němcová,petr.dvořák@gmail.com,HR
+,Karel,Svoboda,jana.malá@seznam.cz,Manager,EXTRA_COLUMN_pSGUK
