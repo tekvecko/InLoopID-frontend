@@ -1,0 +1,78 @@
+from flask import Blueprint, request, jsonify
+from datetime import datetime, UTC
+import hashlib
+from models import db, VerifiableCredentialAnchor
+from tasks import async_issue_tsa_timestamp
+
+api_bp = Blueprint('api_v1', __name__, url_prefix='/api/v1')
+api_v1 = api_bp  # Alias pro zpětnou kompatibilitu
+
+@api_bp.route('/anchor-credential', methods=['POST'])
+def anchor_credential():
+    """
+    Vytvoří kotvu pro Verifiable Credential a zařadí požadavek
+    na kvalifikované eIDAS časové razítko (TSA) do asynchronní Celery fronty.
+    """
+    data = request.get_json() or {}
+    credential_id = data.get('credential_id')
+    raw_payload = data.get('payload')
+
+    if not credential_id or not raw_payload:
+        return jsonify({'error': 'Chybí povinné parametry: credential_id, payload'}), 400
+
+    # Výpočet SHA-256 kryptografického hashu dokumentu
+    content_hash = hashlib.sha256(str(raw_payload).encode('utf-8')).hexdigest()
+
+    # Vytvoření databázového záznamu s výchozím stavem PENDING
+    anchor = VerifiableCredentialAnchor(
+        tenant_id=data.get('tenant_id', 'public_zone'),
+        credential_id=credential_id,
+        issuer_did=data.get('issuer_did'),
+        subject_did=data.get('subject_did'),
+        content_hash=content_hash,
+        proof_signature=data.get('proof_signature'),
+        encrypted_payload=data.get('encrypted_payload', str(raw_payload)),
+        iv=data.get('iv'),
+        wrapped_key=data.get('wrapped_key'),
+        tsa_status='PENDING',
+        created_at=datetime.now(UTC)
+    )
+
+    try:
+        db.session.add(anchor)
+        db.session.commit()
+
+        # Zařazení TSA razítkování do Celery fronty
+        task = async_issue_tsa_timestamp.delay(anchor.id)
+
+        return jsonify({
+            'message': 'Kotva byla úspěšně vytvořena. TSA razítkování probíhá asynchronně.',
+            'anchor_id': anchor.id,
+            'task_id': task.id,
+            'content_hash': content_hash,
+            'tsa_status': anchor.tsa_status
+        }), 202
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Chyba při ukládání kotvy: {str(e)}'}), 500
+
+
+@api_bp.route('/anchor-credential/<int:anchor_id>', methods=['GET'])
+def get_anchor_status(anchor_id):
+    """
+    Vrací aktuální stav ukotvení a eIDAS časového razítka.
+    """
+    anchor = VerifiableCredentialAnchor.query.get(anchor_id)
+    if not anchor:
+        return jsonify({'error': 'Kotva nenalezena'}), 404
+
+    return jsonify({
+        'anchor_id': anchor.id,
+        'credential_id': anchor.credential_id,
+        'content_hash': anchor.content_hash,
+        'tsa_status': anchor.tsa_status,
+        'eidas_tsr_base64': anchor.eidas_tsr_base64,
+        'timestamped_at': anchor.timestamped_at.isoformat() if anchor.timestamped_at else None,
+        'tsa_error': getattr(anchor, 'tsa_error', None)
+    }), 200

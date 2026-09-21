@@ -1,3 +1,57 @@
+#!/usr/bin/env bash
+set -e
+
+# Aktivace virtuálního prostředí
+if [ -d "venv" ]; then
+    source venv/bin/activate
+elif [ -d "../venv" ]; then
+    source ../venv/bin/activate
+else
+    echo "Chyba: Adresář venv nenalezen!"
+    exit 1
+fi
+
+echo "=== 1. Cílené ukončování starých procesů Celery a Flask ==="
+pkill -9 -f "celery worker" || true
+pkill -9 -f "python app.py" || true
+
+echo "=== 2. Úprava celery_app.py (Izolovaná konfigurace Redisu + solo pool) ==="
+if [ -f celery_app.py ]; then
+    cp celery_app.py celery_app.py.bak
+fi
+
+cat << 'INNER_EOF' > celery_app.py
+import os
+from celery import Celery
+
+broker_url = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+result_backend = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+
+celery = Celery(
+    'inloopid_tasks',
+    broker=broker_url,
+    backend=result_backend,
+    include=['tasks']
+)
+
+celery.conf.update(
+    broker_connection_retry_on_startup=True,
+    task_serializer='json',
+    result_serializer='json',
+    accept_content=['json'],
+    worker_pool='solo'
+)
+
+if __name__ == '__main__':
+    celery.start()
+INNER_EOF
+
+echo "=== 3. Úprava app.py (Import Celery bez cirkulární závislosti) ==="
+if [ -f app.py ]; then
+    cp app.py app.py.bak
+fi
+
+cat << 'INNER_EOF' > app.py
 import sys
 import os
 
@@ -65,3 +119,6 @@ app = create_app()
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port, debug=True)
+INNER_EOF
+
+echo "=== Patch úspěšně aplikován! ==="

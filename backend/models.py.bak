@@ -4,7 +4,7 @@ from datetime import datetime, UTC
 db = SQLAlchemy()
 
 class CompanyWorkspace(db.Model):
-    __tablename__ = 'company_workspaces'
+    __tablename__ = 'company_workspaces'                       
     tenant_id = db.Column(db.String(100), primary_key=True)
     company_name = db.Column(db.String(255), nullable=False)
     ico = db.Column(db.String(20), nullable=True)
@@ -32,22 +32,18 @@ class IdentityNode(db.Model):
 class VerifiableCredentialAnchor(db.Model):
     __tablename__ = 'verifiable_credential_anchors'
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.String(100), nullable=True, default='public_zone', index=True)
+    tenant_id = db.Column(db.String(100), nullable=False, index=True)
     credential_id = db.Column(db.String(255), unique=True, nullable=False)
-    issuer_did = db.Column(db.String(255), db.ForeignKey('identity_nodes.did_uri'), nullable=True)
-    subject_did = db.Column(db.String(255), db.ForeignKey('identity_nodes.did_uri'), nullable=True)
+    issuer_did = db.Column(db.String(255), db.ForeignKey('identity_nodes.did_uri'), nullable=False)
+    subject_did = db.Column(db.String(255), db.ForeignKey('identity_nodes.did_uri'), nullable=False)
     content_hash = db.Column(db.String(64), nullable=False, index=True)
-    proof_signature = db.Column(db.Text, nullable=True)
+    proof_signature = db.Column(db.Text, nullable=False)
     hr_tsa_token = db.Column(db.Text, nullable=True)
-    encrypted_payload = db.Column(db.Text, nullable=True)
-    iv = db.Column(db.String(50), nullable=True)
-    wrapped_key = db.Column(db.Text, nullable=True)
+    encrypted_payload = db.Column(db.Text, nullable=False)     
+    iv = db.Column(db.String(50), nullable=False)              
+    wrapped_key = db.Column(db.Text, nullable=False)           
     subject_signature = db.Column(db.Text, nullable=True)
     employee_tsa_token = db.Column(db.Text, nullable=True)
-    tsa_status = db.Column(db.String(50), default='PENDING')
-    eidas_tsr_base64 = db.Column(db.Text, nullable=True)
-    timestamped_at = db.Column(db.DateTime, nullable=True)
-    tsa_error = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), default='anchored')
     clearance_level = db.Column(db.String(50), default='standard')
     valid_until = db.Column(db.DateTime, nullable=True)
@@ -57,8 +53,8 @@ class VerifiableCredentialAnchor(db.Model):
 class BlindAuditLog(db.Model):
     __tablename__ = 'blind_audit_logs'
     id = db.Column(db.Integer, primary_key=True)
-    action = db.Column(db.String(255), nullable=False)
-    actor_did = db.Column(db.String(255), nullable=True)
+    action = db.Column(db.String(255), nullable=False)         
+    actor_did = db.Column(db.String(255), nullable=True)       
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 

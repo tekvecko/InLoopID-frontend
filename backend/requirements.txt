@@ -17,3 +17,4 @@ python-dotenv==1.2.2
 python_docx==1.2.0
 waitress
 waitress==3.0.2
+gunicorn

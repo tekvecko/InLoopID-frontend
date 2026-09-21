@@ -1,89 +1,90 @@
-import os, smtplib
-from email.message import EmailMessage
-from celery import Celery
+import os
+import tempfile
+import subprocess
+import requests
+import logging
+from datetime import datetime
+from celery_app import celery
 
-redis_url = os.environ.get('REDIS_URL')
+logger = logging.getLogger(__name__)
 
-celery_app = Celery(
-    'inloopid_tasks',
-    broker=redis_url or 'memory://',
-    backend=redis_url or 'cache+memory://'
-)
+@celery.task(bind=True, max_retries=3, default_retry_delay=10)
+def async_issue_tsa_timestamp(self, anchor_id: int):
+    """
+    Asynchronní získání kvalifikovaného eIDAS časového razítka (TSA)
+    a jeho ukotvení k Verifiable Credential záznamu.
+    """
+    from app import db, create_app
+    from models import VerifiableCredentialAnchor
 
-# Fallback pro Termux (lokální vývoj bez Redisu)
-if not redis_url:
-    celery_app.conf.task_always_eager = True
+    app = create_app()
+    with app.app_context():
+        anchor = VerifiableCredentialAnchor.query.get(anchor_id)
+        if not anchor:
+            logger.error(f"[TSA Task] VerifiableCredentialAnchor ID {anchor_id} nenalezen v databázi.")
+            return False
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
-def send_invitations_task(self, invitations, company_name, smtp_server, smtp_port, smtp_user, smtp_pass):
-    try:
-        server = smtplib.SMTP_SSL(smtp_server, int(smtp_port)) if int(smtp_port) == 465 else smtplib.SMTP(smtp_server, int(smtp_port))
-        if int(smtp_port) != 465: server.starttls()
-        server.login(smtp_user, smtp_pass)
-        
-        for email, link in invitations:
-            msg = EmailMessage()
-            msg['Subject'] = f'Pozvánka do Onboarding portálu: {company_name}'
-            msg['From'] = smtp_user
-            msg['To'] = email
-            
-            html_content = f'''
-            <html>
-            <body style="font-family: Arial, sans-serif; background-color: #020617; color: #ffffff; padding: 40px; text-align: center;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #0f172a; padding: 40px; border-radius: 24px; border: 1px solid #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                    <div style="width: 60px; height: 60px; background-color: rgba(59, 130, 246, 0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                        <span style="color: #3b82f6; font-size: 30px; font-weight: bold;">&#x1F6E1;</span>
-                    </div>
-                    <h2 style="color: #f8fafc; font-size: 24px; margin-bottom: 10px;">Vítejte v InLoopID</h2>
-                    <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                        Společnost <strong style="color: #ffffff;">{company_name}</strong> Vám zaslala pozvánku do bezpečného HR portálu.
-                    </p>
-                    <a href="{link}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; transition: background-color 0.3s;">
-                        Odemknout Trezor přes MojeID
-                    </a>
-                    <hr style="border: none; border-top: 1px solid #1e293b; margin: 40px 0 20px 0;">
-                    <p style="color: #64748b; font-size: 12px; line-height: 1.5;">
-                        Tento odkaz je jednorázový a kryptograficky chráněný architekturou Zero-Knowledge.<br>Nikomu jej nepřeposílejte.
-                    </p>
-                </div>
-            </body>
-            </html>
-            '''
-            msg.set_content(f"Dobrý den,\nSpolečnost {company_name} Vás zve do HR portálu.\nOdkaz: {link}")
-            msg.add_alternative(html_content, subtype='html')
-            server.send_message(msg)
-            
-        server.quit()
-        return f"[SMTP] Odesláno {len(invitations)} pozvánek."
-    except Exception as exc:
-        print(f"[SMTP CHYBA] {exc}")
-        raise self.retry(exc=exc)
+        tmp_hash_path = None
+        query_tsq_path = None
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
-def send_contract_notice_task(self, email, company_name, smtp_server, smtp_port, smtp_user, smtp_pass):
-    try:
-        server = smtplib.SMTP_SSL(smtp_server, int(smtp_port)) if int(smtp_port) == 465 else smtplib.SMTP(smtp_server, int(smtp_port))
-        if int(smtp_port) != 465: server.starttls()
-        server.login(smtp_user, smtp_pass)
+        try:
+            content_hash = anchor.content_hash
 
-        msg = EmailMessage()
-        msg['Subject'] = f'Nová smlouva k podpisu: {company_name}'
-        msg['From'] = smtp_user
-        msg['To'] = email
+            # 1. Příprava dočasného souboru s hex hashem pro OpenSSL TSQ
+            with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.hash') as tmp:
+                tmp.write(content_hash)
+                tmp_hash_path = tmp.name
 
-        html = f'''
-        <div style="font-family: sans-serif; background: #0f172a; padding: 40px; color: white; text-align: center; border-radius: 16px;">
-            <h2 style="color: #3b82f6;">Máte nový dokument v InLoopID</h2>
-            <p style="color: #94a3b8;">Společnost <b>{company_name}</b> Vám zaslala smlouvu k elektronickému podpisu.</p>
-            <a href="http://localhost:5173/employee" style="display: inline-block; padding: 15px 30px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px;">Vstoupit do Trezoru</a>
-        </div>
-        '''
-        msg.set_content(f"Nová smlouva k podpisu od {company_name}. Přihlaste se zde: http://localhost:5173/employee")
-        msg.add_alternative(html, subtype='html')
+            query_tsq_path = f"{tmp_hash_path}.tsq"
 
-        server.send_message(msg)
-        server.quit()
-        return f"[SMTP] Upozornění odesláno na {email}."
-    except Exception as exc:
-        print(f"[SMTP CHYBA] {exc}")
-        raise self.retry(exc=exc)
+            # 2. Generování TSQ (Timestamp Request) požadavku přes OpenSSL
+            cmd = [
+                "openssl", "ts", "-query",
+                "-digest", content_hash,
+                "-sha256",
+                "-cert",
+                "-out", query_tsq_path
+            ]
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            # 3. Odeslání TSQ požadavku na TSA server
+            tsa_url = os.getenv("TSA_SERVER_URL", "https://freetsa.org/tsr")
+            with open(query_tsq_path, "rb") as f:
+                tsq_data = f.read()
+
+            response = requests.post(
+                tsa_url,
+                data=tsq_data,
+                headers={"Content-Type": "application/timestamp-query"},
+                timeout=15
+            )
+            response.raise_for_status()
+
+            # 4. Uložení získaného TSR (Timestamp Response) v Hex
+            tsr_hex = response.content.hex()
+
+            anchor.eidas_tsr_base64 = tsr_hex
+            anchor.tsa_status = "COMPLETED"
+            anchor.timestamped_at = datetime.utcnow()
+            db.session.commit()
+
+            logger.info(f"[TSA Task] Časové razítko pro anchor ID {anchor_id} bylo úspěšně získáno a uloženo.")
+            return True
+
+        except Exception as exc:
+            db.session.rollback()
+            logger.warning(f"[TSA Task] Chyba při komunikaci s TSA pro anchor ID {anchor_id}: {exc}")
+
+            if self.request.retries >= self.max_retries:
+                anchor.tsa_status = "FAILED"
+                anchor.tsa_error = str(exc)
+                db.session.commit()
+                logger.error(f"[TSA Task] Získání TSA razítka pro anchor ID {anchor_id} selhalo po {self.max_retries} pokusech.")
+            else:
+                raise self.retry(exc=exc)
+
+        finally:
+            if tmp_hash_path and os.path.exists(tmp_hash_path):
+                os.remove(tmp_hash_path)
+            if query_tsq_path and os.path.exists(query_tsq_path):
+                os.remove(query_tsq_path)
