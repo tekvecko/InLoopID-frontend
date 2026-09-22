@@ -1,0 +1,465 @@
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { ShieldCheck, Lock, Database, Award, Briefcase, User, Send, Fingerprint, FileSignature, Scale, FileCheck, Search, Mail, MapPin, Clock, CheckCircle, Loader2, Check, Key, Unlock, Eye, EyeOff, Laptop, Server, Archive, AlertTriangle, Play, Menu, X, FilePlus, PenTool, Activity, Users, Shield, ChevronLeft, ChevronRight, FileText, Calculator, TrendingDown, Clock3, AlertOctagon, Wand2, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const BentoCard = ({ children, className }) => {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+  
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+  
+  return (
+    <div onMouseMove={handleMouseMove} onMouseEnter={() => setOpacity(1)} onMouseLeave={() => setOpacity(0)} className={`anim-card relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-1 ${className}`}>
+      <div className="pointer-events-none absolute -inset-px transition-opacity duration-300 z-0" style={{ opacity, background: `radial-gradient(600px circle at ${pos.x}px ${pos.y}px, rgba(30,58,138,0.08), transparent 40%)` }}/>
+      <div className="relative z-10 h-full p-10 flex flex-col items-start text-left">{children}</div>
+    </div>
+  );
+};
+
+const UnifiedBentoGrid = () => {
+  return (
+    <section className="py-24 px-6 max-w-6xl mx-auto">
+      <div className="text-center mb-16">
+        <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight text-[#0B1120]">Legislativní pilíř & Compliance</h2>
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto font-medium">Nástroj, který radikálně snižuje administrativní zátěž a eliminuje lidské chyby vedoucí k finančním sankcím.</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(250px,auto)]">
+        <div className="md:col-span-2 md:row-span-2 p-10 rounded-[2.5rem] bg-[#0B1120] text-white border border-blue-900/50 shadow-2xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-500">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+          <Lock className="text-blue-500 mb-8" size={48}/>
+          <h3 className="text-3xl font-black mb-4 tracking-tight">Architektura Slepého notáře</h3>
+          <p className="text-slate-400 text-lg leading-relaxed max-w-lg">Veškeré šifrování dat (AES-256-GCM) probíhá výhradně lokálně na koncovém zařízení. Naše servery plní roli pouhého transportu. Technologicky nemáme možnost vaše dokumenty číst, analyzovat ani zneužít.</p>
+        </div>
+        <div className="p-8 rounded-[2rem] bg-white border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Activity className="text-rose-600 mb-6" size={36} />
+          <h3 className="text-xl font-bold text-[#0B1120] mb-3">Compliance Radar</h3>
+          <p className="text-slate-600 text-sm leading-relaxed">Ukončujeme éru ručního hlídání termínů. Radar v reálném čase monitoruje expirace smluv a zákonné limity DPP/DPČ.</p>
+        </div>
+        <div className="p-8 rounded-[2rem] bg-blue-50/50 border border-blue-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <FileCheck className="text-blue-700 mb-6" size={36} />
+          <h3 className="text-xl font-bold text-[#0B1120] mb-3">Digitální Právník</h3>
+          <p className="text-slate-600 text-sm leading-relaxed">Aktivně blokuje nelegální úkony a varuje před překročením zkušebních dob přímo při generování návrhů.</p>
+        </div>
+        <div className="md:col-span-2 p-10 rounded-[2rem] bg-white border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-center">
+          <div className="flex items-center gap-6">
+            <Award className="text-emerald-600 flex-shrink-0" size={56}/>
+            <div>
+              <h3 className="text-2xl font-bold text-[#0B1120] mb-2 tracking-tight">Kvalifikovaná pečeť eIDAS & Blockchain</h3>
+              <p className="text-slate-600 leading-relaxed">Každý úkon je zafixován certifikovaným časovým razítkem autority a zapsán do sítě Bitcoin. Vzniká tak absolutně nevyvratitelný důkaz pro soudy a inspekce.</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-8 rounded-[2rem] bg-white border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Users className="text-amber-600 mb-6" size={36} />
+          <h3 className="text-xl font-bold text-[#0B1120] mb-3">Okamžitá adopce</h3>
+          <p className="text-slate-600 text-sm leading-relaxed">Nasazení bez paralýzy HR. Nástroj zpracuje stávající databáze a automatizuje zabezpečené pozvánky.</p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ROICalculator = () => {
+  const [employees, setEmployees] = useState(150);
+  const hoursSaved = Math.round(employees * 3.5);
+  const costSaved = Math.round(employees * 650);
+  const riskMitigated = employees > 200 ? 1000000 : (employees > 50 ? 500000 : 100000);
+
+  return (
+    <section className="py-12 px-6 max-w-5xl mx-auto -mt-16 relative z-20">
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-900 via-blue-600 to-emerald-500"></div>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-blue-50 text-blue-900 mb-6"><Calculator size={32}/></div>
+          <h2 className="text-3xl md:text-4xl font-black text-[#0B1120] mb-4 tracking-tight">Kvantifikace provozních úspor</h2>
+          <p className="text-slate-600 font-medium">Zjistěte, kolik InLoopID ušetří vaší společnosti v prvním roce nasazení.</p>
+        </div>
+        <div className="mb-12 max-w-2xl mx-auto bg-slate-50 p-8 rounded-3xl border border-slate-100">
+          <div className="flex justify-between items-end mb-4">
+            <label className="font-bold text-slate-700 uppercase tracking-wider text-sm">Velikost podniku</label>
+            <span className="text-3xl font-black text-blue-900">{employees} <span className="text-lg text-slate-500 font-medium">zaměstnanců</span></span>
+          </div>
+          <input type="range" min="10" max="1000" step="10" value={employees} onChange={(e) => setEmployees(Number(e.target.value))} className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-900"/>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100 text-center"><Clock3 className="mx-auto text-blue-600 mb-4" size={32}/><div className="text-3xl font-black text-[#0B1120] mb-2">{hoursSaved} h</div><div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Ušetřený čas HR / rok</div></div>
+          <div className="p-6 rounded-3xl bg-emerald-50/50 border border-emerald-100 text-center"><TrendingDown className="mx-auto text-emerald-600 mb-4" size={32}/><div className="text-3xl font-black text-[#0B1120] mb-2">{costSaved.toLocaleString('cs-CZ')} Kč</div><div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Přímé materiální úspory</div></div>
+          <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 text-center"><AlertOctagon className="mx-auto text-slate-600 mb-4" size={32}/><div className="text-3xl font-black text-[#0B1120] mb-2">Až {riskMitigated.toLocaleString('cs-CZ')} Kč</div><div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Eliminované pokuty (OIP)</div></div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const PitchDeck = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = [
+    { title: "Standard absolutní důvěry", subtitle: "Enterprise řešení pro HR", icon: <ShieldCheck size={80} className="text-blue-900" />, content: "Zabezpečená infrastruktura pro digitalizaci pracovněprávních procesů bez ztráty kontroly nad citlivými údaji." },
+    { title: "Rizika tradičního cloudu", subtitle: "Ztráta datové suverenity", icon: <AlertTriangle size={80} className="text-rose-600" />, content: "Běžné systémy vyžadují odeslání dat na servery třetích stran v čitelné podobě, což představuje neakceptovatelné právní riziko a vystavuje vás Vendor Lock-inu." },
+    { title: "Matematická garance", subtitle: "Zero-Knowledge Architektura", icon: <Database size={80} className="text-emerald-600" />, content: "Naše bezpečnost nestojí na smluvních slibech. Je fyzikálně vynucena nedostupností dešifrovacích klíčů na straně provozovatele platformy." }
+  ];
+  return (
+    <div className="anim-card w-full max-w-5xl mx-auto bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm my-8 transition-transform origin-center">
+      <div className="flex flex-col md:flex-row items-center min-h-[350px]">
+        <div className="md:w-1/3 flex justify-center p-12 bg-slate-50 border-r border-slate-100">{slides[currentSlide].icon}</div>
+        <div className="md:w-2/3 p-12"><h2 className="text-3xl font-extrabold text-[#0B1120] mb-2">{slides[currentSlide].title}</h2><h3 className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-6">{slides[currentSlide].subtitle}</h3><p className="text-lg text-slate-600 leading-relaxed">{slides[currentSlide].content}</p></div>
+      </div>
+      <div className="bg-slate-50 p-6 flex justify-between items-center border-t border-slate-100">
+        <button onClick={() => setCurrentSlide(p => Math.max(0, p-1))} disabled={currentSlide === 0} className="flex items-center gap-2 font-bold text-slate-500 hover:text-blue-900 disabled:opacity-30 transition-colors"><ChevronLeft size={20}/> Předchozí</button>
+        <div className="flex gap-2">{slides.map((_, i) => <div key={i} className={`w-2 h-2 rounded-full ${currentSlide === i ? 'bg-blue-900' : 'bg-slate-300'}`}/>)}</div>
+        <button onClick={() => setCurrentSlide(p => Math.min(slides.length-1, p+1))} disabled={currentSlide === slides.length - 1} className="flex items-center gap-2 font-bold text-slate-500 hover:text-blue-900 disabled:opacity-30 transition-colors">Další <ChevronRight size={20}/></button>
+      </div>
+    </div>
+  );
+};
+
+const ProcessVisualization = () => {
+  const steps = [
+    { icon: <FilePlus size={24}/>, title: "Generování Smart Smlouvy", desc: "Automatické mapování dat na certifikované šablony s validací Zákoníku práce." },
+    { icon: <Lock size={24}/>, title: "Lokální AES-256 Šifrování", desc: "Data jsou na zařízení nevratně zašifrována. Server přijímá pouze matematický šum." },
+    { icon: <Fingerprint size={28}/>, title: "Ověření e-identitou občanem", desc: "Uchazeč prokazuje svou totožnost státem garantovaným standardem (MojeID).", highlight: true },
+    { icon: <PenTool size={24}/>, title: "Kryptografický podpis stran", desc: "Autorizace elektronického dokumentu zaměstnancem i zaměstnavatelem." },
+    { icon: <Award size={24}/>, title: "Kvalifikovaná eIDAS Pečeť", desc: "Zafixování dokumentu časovým razítkem autority pro absolutní právní vymahatelnost." }
+  ];
+  return (
+    <section className="py-24 px-6 relative z-10 bg-slate-50">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/50 border border-blue-200 text-blue-900 text-xs font-bold uppercase tracking-widest mb-6">Architektura procesu</div>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight text-[#0B1120]">Transparentní Pipeline (Audit Log)</h2>
+        </div>
+        <div className="relative">
+          <div className="absolute left-8 md:left-1/2 top-8 bottom-8 w-1 bg-slate-200 transform md:-translate-x-1/2 rounded-full"/>
+          <div className="space-y-12">
+            {steps.map((step, idx) => (
+              <div key={idx} className={`relative flex flex-col md:flex-row items-start md:items-center ${idx % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                <div className={`absolute left-8 md:left-1/2 w-16 h-16 rounded-full bg-white flex items-center justify-center transform -translate-x-1/2 md:-translate-x-1/2 z-10 shadow-lg transition-transform hover:scale-110 ${step.highlight ? 'ring-4 ring-blue-900/20 border-2 border-blue-900 text-blue-900' : 'border-4 border-slate-100 text-slate-700'}`}>{step.icon}</div>
+                <div className={`ml-24 md:ml-0 md:w-1/2 ${idx % 2 === 0 ? 'md:pl-20' : 'md:pr-20 text-left md:text-right'}`}>
+                  <div className={`anim-card bg-white border p-8 rounded-[2rem] ${step.highlight ? 'border-blue-200 shadow-xl bg-blue-50/30' : 'border-slate-100 shadow-sm'}`}>
+                    <div className={`text-[10px] font-black uppercase tracking-widest mb-3 ${step.highlight ? 'text-blue-900' : 'text-slate-400'}`}>Fáze 0{idx + 1}</div>
+                    <h3 className="text-2xl font-bold text-[#0B1120] mb-3">{step.title}</h3><p className="text-slate-600">{step.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const CryptographicCapsulePR = () => (
+  <section className="py-24 px-4 md:px-6 relative z-10">
+    <div className="anim-card max-w-6xl mx-auto bg-[#0A1128] text-white rounded-[3rem] overflow-hidden shadow-2xl border border-blue-950 relative p-8 md:p-16">
+      <div className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] left-[-10%] w-[300px] h-[300px] bg-emerald-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="relative z-10 text-center max-w-3xl mx-auto mb-16">
+        <Archive size={64} className="text-blue-400 mx-auto mb-6" />
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-widest mb-6">Ochrana proti Vendor Lock-inu</div>
+        <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-white">Off-grid nezávislost: Trezorová Kapsle</h2>
+        <p className="text-xl text-slate-300 leading-relaxed font-medium">Garantujeme dostupnost dat nezávisle na naší infrastruktuře. Kdykoliv můžete vygenerovat plně soběstačný off-grid HTML archiv všech vašich HR smluv.</p>
+      </div>
+      <div className="relative z-10 grid md:grid-cols-3 gap-8">
+        <div className="bg-[#111A3A] border border-blue-900/50 p-8 rounded-[2rem] hover:bg-[#152147] transition-colors"><Laptop className="text-blue-400 mb-6" size={40} /><h3 className="text-xl font-bold mb-4 text-white">Prohlížeč jako dešifrátor</h3><p className="text-slate-400 leading-relaxed text-sm">Kapsle obsahuje šifrovaná data i kryptografický engine. Pro dešifrování auditní stopy stačí standardní webový prohlížeč v offline režimu, API není potřeba.</p></div>
+        <div className="bg-[#111A3A] border border-blue-900/50 p-8 rounded-[2rem] hover:bg-[#152147] transition-colors"><Shield className="text-emerald-400 mb-6" size={40} /><h3 className="text-xl font-bold mb-4 text-white">Průmyslový standard</h3><p className="text-slate-400 leading-relaxed text-sm">Celý lokální archiv je chráněn algoritmem AES-256-GCM. Absence centrální správy klíčů zajišťuje, že i při kompromitaci fyzického média je prolomení vyloučeno.</p></div>
+        <div className="bg-[#111A3A] border border-blue-900/50 p-8 rounded-[2rem] hover:bg-[#152147] transition-colors"><Key className="text-amber-400 mb-6" size={40} /><h3 className="text-xl font-bold mb-4 text-white">Shamir's Secret Sharing</h3><p className="text-slate-400 leading-relaxed text-sm">Implementujeme kryptografické schéma (2 ze 3). Master klíč k archivu je distribuován mezi členy vedení, čímž je vynucen princip "Four-Eyes" pro jeho odemčení.</p></div>
+      </div>
+    </div>
+  </section>
+);
+
+const InteractiveDemo = () => {
+  const [activeTab, setActiveTab] = useState('hr');
+  const [workflow, setWorkflow] = useState('draft'); 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showEncrypted, setShowEncrypted] = useState(false);
+  const [candidateEmail, setCandidateEmail] = useState('');
+  const [contractType, setContractType] = useState('HPP');
+  const [employeeRole, setEmployeeRole] = useState('regular');
+  const [probationMonths, setProbationMonths] = useState(3);
+  const [durationMonths, setDurationMonths] = useState(12);
+  const [position, setPosition] = useState('');
+  const [workplace, setWorkplace] = useState('');
+  const [weeklyHours, setWeeklyHours] = useState(40);
+  const [salary, setSalary] = useState('');
+  const [lawyerErrors, setLawyerErrors] = useState([]);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [pipelineInput, setPipelineInput] = useState("");
+  const [pipelineStep, setPipelineStep] = useState(0); 
+  const [payloadHex, setPayloadHex] = useState("");
+  const [shamirLogs, setShamirLogs] = useState(["> Systém je připraven k inicializaci enterprise master klíče."]);
+  const [vaultUnlocked, setVaultUnlocked] = useState(false);
+  const [insertedShards, setInsertedShards] = useState([]);
+  const [auditStep, setAuditStep] = useState(0); 
+
+  useEffect(() => {
+    const errors = [];
+    if (workflow === 'draft' && candidateEmail && !candidateEmail.includes('@')) errors.push("Zadejte validní korporátní e-mail uchazeče.");
+    if (contractType === 'HPP') {
+      const maxProbation = employeeRole === 'manager' ? 6 : 3;
+      if (probationMonths > maxProbation) errors.push(`Zkušební doba pro tuto pozici nesmí překročit ${maxProbation} měsíce (§ 35 ZP).`);
+    }
+    setLawyerErrors(errors);
+  }, [candidateEmail, contractType, employeeRole, probationMonths, durationMonths]);
+
+  useEffect(() => {
+    setPipelineInput(`INLOOPID_VC_METADATA:\nIssuer: Firma a.s.\nRole: ${employeeRole}\nPosition: ${position || 'N/A'}\nSalary_Tier: ${salary || 'N/A'} CZK\nWorkplace: ${workplace || 'N/A'}\nTimestamp: ${new Date().toISOString()}`);
+  }, [employeeRole, position, salary, workplace]);
+
+  const handleSmartAutoFill = () => {
+    setIsAutoFilling(true);
+    setTimeout(() => {
+      setCandidateEmail('karel.novotny@enterprise.cz');
+      setPosition('Senior Cloud Architekt');
+      setWorkplace('Brno (HQ) / Hybrid');
+      setSalary('120 000');
+      setEmployeeRole('manager');
+      setProbationMonths(6);
+      setIsAutoFilling(false);
+    }, 1500);
+  };
+
+  const executeSendToCandidate = () => {
+    if(!candidateEmail || !position) return;
+    setIsProcessing(true);
+    setTimeout(() => { setWorkflow('sent'); setIsProcessing(false); setActiveTab('candidate'); }, 1200);
+  };
+
+  const executeLoginMojeID = () => {
+    setIsProcessing(true);
+    setTimeout(() => { setWorkflow('mojeid'); setIsProcessing(false); }, 1200);
+  };
+
+  const executeSignCandidate = () => {
+    setIsProcessing(true);
+    setTimeout(() => { setWorkflow('candidate_signed'); setIsProcessing(false); setActiveTab('hr'); }, 1200);
+  };
+
+  const executeFinalApproveHR = () => {
+    setIsProcessing(true);
+    setTimeout(() => { setWorkflow('completed'); setIsProcessing(false); setActiveTab('view'); }, 1500);
+  };
+
+  const executeCryptoPipeline = async () => {
+    setPipelineStep(1);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pipelineInput + Date.now().toString());
+    const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    setTimeout(() => {
+      setPayloadHex(hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase());
+      setPipelineStep(2);
+      setTimeout(() => setPipelineStep(3), 1500);
+    }, 1200);
+  };
+
+  const executeKeyCeremony = () => {
+    setInsertedShards([]); setVaultUnlocked(false);
+    setShamirLogs(["> Key Generation Ceremony dokončena.", "> 3 nezávislé šardy vygenerovány.", "> Pro přístup vyžadována přítomnost libovolných 2 autorit."]);
+  };
+
+  const injectShard = (id, label) => {
+    if (insertedShards.includes(id)) return;
+    const nextShards = [...insertedShards, id];
+    setInsertedShards(nextShards);
+    const currentLogs = [...shamirLogs, `> Importován ŠARD ${id}/3 [Autorita: ${label}] - Kontrolní součet validní.`];
+    if (nextShards.length === 2) {
+      currentLogs.push("> Dosažen kryptografický kvorum (K=2). Spouštím Lagrangeovu interpolaci nad GF(2^8)...");
+      setShamirLogs(currentLogs);
+      setTimeout(() => { setVaultUnlocked(true); setShamirLogs([...currentLogs, "> MASTER KEY REKONSTRUOVÁN. Izolovaná DB dešifrována a zpřístupněna."]); }, 1500);
+    } else { setShamirLogs(currentLogs); }
+  };
+
+  const executeAuditEngine = () => {
+    setAuditStep(1);
+    setTimeout(() => { setAuditStep(2); setTimeout(() => { setAuditStep(3); setTimeout(() => setAuditStep(4), 1500); }, 1200); }, 1200);
+  };
+
+  return (
+    <div className="flex flex-col w-full min-h-[650px] bg-[#0B1120] text-slate-100 rounded-b-[2rem] overflow-hidden border border-blue-950/50 shadow-2xl relative z-20">
+      <div className="flex justify-start items-center bg-[#0A101D] border-b border-blue-900/30 px-4 overflow-x-auto scrollbar-hide select-none">
+        {[
+          { id: 'hr', label: '1. HR Terminál', icon: <Briefcase size={16}/> },
+          { id: 'candidate', label: '2. Zaměstnanec', icon: <User size={16}/> },
+          { id: 'zeroknowledge', label: '3. ZK Pipeline', icon: <Lock size={16}/> },
+          { id: 'capsule', label: '4. T-Kapsle', icon: <Archive size={16}/> },
+          { id: 'view', label: '5. Slepý notář', icon: <Eye size={16}/> },
+          { id: 'audit', label: '6. eIDAS Audit', icon: <Scale size={16} className="text-emerald-400"/> }
+        ].map((tab) => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 py-4 px-4 text-xs md:text-sm font-bold border-b-2 whitespace-nowrap transition-all ${activeTab === tab.id ? 'border-blue-500 text-blue-400 bg-[#111A3A]/50' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>{tab.icon} {tab.label}</button>
+        ))}
+      </div>
+      <div className="flex-1 p-6 md:p-8">
+        {activeTab === 'hr' && (
+          <div className="max-w-4xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
+            <div className="border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-6 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-white"><Briefcase size={20} className="text-blue-500"/> Korporátní editor kontraktů</h3>
+                {workflow === 'draft' && ( <button onClick={handleSmartAutoFill} disabled={isAutoFilling} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-blue-300 border border-blue-700/50 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50">{isAutoFilling ? <Loader2 size={14} className="animate-spin"/> : <Wand2 size={14}/>} Smart Vytěžení z CV</button> )}
+              </div>
+              {workflow === 'draft' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div><label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">Komunikační e-mail</label><input type="email" value={candidateEmail} onChange={(e)=>setCandidateEmail(e.target.value)} className="w-full bg-[#0B1120] border border-blue-900/50 rounded-xl p-3 text-white text-sm outline-none focus:border-blue-500" placeholder="zadejte e-mail..." /></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div><label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">Pozice</label><input type="text" value={position} onChange={(e)=>setPosition(e.target.value)} className="w-full bg-[#0B1120] border border-blue-900/50 rounded-xl p-3 text-white text-sm outline-none focus:border-blue-500" placeholder="název..." /></div>
+                        <div><label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">Mzda (CZK)</label><input type="text" value={salary} onChange={(e)=>setSalary(e.target.value)} className="w-full bg-[#0B1120] border border-blue-900/50 rounded-xl p-3 text-white text-sm outline-none focus:border-blue-500" placeholder="hrubá mzda..." /></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div><label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">Role</label><select value={employeeRole} onChange={(e)=>setEmployeeRole(e.target.value)} className="w-full bg-[#0B1120] border border-blue-900/50 rounded-xl p-3 text-white text-sm outline-none"><option value="regular">Běžná</option><option value="manager">Management</option></select></div>
+                        <div><label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase tracking-wider">Zkušebka (Měs.)</label><input type="number" value={probationMonths} onChange={(e)=>setProbationMonths(Number(e.target.value))} className="w-full bg-[#0B1120] border border-blue-900/50 rounded-xl p-3 text-white text-sm outline-none focus:border-blue-500"/></div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-[#0B1120] border border-blue-900/30 rounded-xl p-5 flex-1 font-mono text-xs text-slate-400 space-y-3 relative">
+                        <div className="text-white font-bold border-b border-blue-900/50 pb-2 uppercase tracking-wider text-[10px] flex items-center gap-2"><Zap size={12} className="text-amber-400"/> Automatická e-Identifikace</div>
+                        <p className="flex justify-between items-center"><span className="text-slate-500">Jméno:</span> <span className="text-blue-400 italic">Doplní MojeID</span></p>
+                        <p className="flex justify-between items-center"><span className="text-slate-500">Narození:</span> <span className="text-blue-400 italic">Doplní MojeID</span></p>
+                        <p className="flex justify-between items-center"><span className="text-slate-500">Bydliště:</span> <span className="text-blue-400 italic">Doplní MojeID</span></p>
+                      </div>
+                      <div className={`p-4 rounded-xl border text-xs transition-all duration-300 ${lawyerErrors.length > 0 ? 'bg-rose-950/20 border-rose-800 text-rose-300' : 'bg-emerald-950/20 border-emerald-800/50 text-emerald-400'}`}>
+                        <div className="font-bold uppercase tracking-wider mb-1 flex items-center gap-2">{lawyerErrors.length > 0 ? <AlertTriangle size={14}/> : <CheckCircle size={14}/>} Digitální Právník</div>
+                        {lawyerErrors.length > 0 ? <ul className="list-disc pl-4">{lawyerErrors.map((err, i) => <li key={i}>{err}</li>)}</ul> : <p>V souladu se ZP.</p>}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={executeSendToCandidate} disabled={isProcessing || lawyerErrors.length > 0 || !candidateEmail} className="w-full bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(29,78,216,0.3)] text-sm flex items-center justify-center gap-2">{isProcessing ? <Loader2 className="animate-spin" size={16}/> : <Send size={16} />} Klientsky zašifrovat a odeslat návrh</button>
+                </div>
+              )}
+              {(workflow === 'sent' || workflow === 'mojeid') && ( <div className="text-center py-16 space-y-4"><Loader2 className="animate-spin mx-auto text-blue-500" size={40} /><h4 className="font-bold text-white text-lg">Čekání na uchazeče</h4><p className="text-sm text-slate-400">Přepněte se do záložky "2. Zaměstnanec".</p></div> )}
+              {workflow === 'candidate_signed' && ( <div className="space-y-6 text-center py-10"><CheckCircle className="mx-auto text-emerald-500" size={48}/><div><h4 className="font-bold text-white text-xl">Identita potvrzena</h4><p className="text-slate-400 text-sm mt-2">Zaměstnanec se bezpečně autorizoval přes NIA. Dokument je připraven k firemní pečeti.</p></div><button onClick={executeFinalApproveHR} disabled={isProcessing} className="w-full max-w-md mx-auto bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"><FileSignature size={16}/> Uzavřít a ukotvit v eIDAS</button></div> )}
+              {workflow === 'completed' && ( <div className="text-center py-16"><Check size={48} className="mx-auto text-emerald-400 mb-4"/><h3 className="text-xl font-bold text-white">Smlouva zalogována</h3><button onClick={()=>{setWorkflow('draft'); setActiveTab('hr');}} className="text-sm text-blue-400 hover:underline mt-4">Nový návrh</button></div> )}
+            </div>
+          </div>
+        )}
+        {activeTab === 'candidate' && (
+          <div className="max-w-2xl mx-auto border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-10 text-center animate-in fade-in">
+            {workflow === 'draft' ? <div className="text-slate-500 py-10">Nejprve odešlete smlouvu z HR terminálu.</div> :
+             workflow === 'sent' ? <div><h3 className="text-2xl font-bold text-white mb-6">Máte nový návrh smlouvy</h3><button onClick={executeLoginMojeID} disabled={isProcessing} className="w-full bg-[#005AA8] hover:bg-[#004A8B] text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2"><Fingerprint size={20}/> Ověřit totožnost (MojeID)</button></div> :
+             workflow === 'mojeid' ? <div><h3 className="text-2xl font-bold text-emerald-400 mb-6">Identita ověřena</h3><div className="bg-[#0B1120] text-left p-6 rounded-xl border border-blue-900/30 mb-6 font-mono text-sm space-y-2"><p><span className="text-slate-500">Jméno:</span> <span className="text-white">Karel Novotný</span></p><p><span className="text-slate-500">RČ:</span> <span className="text-white">900101/1234</span></p></div><button onClick={executeSignCandidate} disabled={isProcessing} className="w-full bg-blue-600 py-4 rounded-xl font-bold flex justify-center items-center gap-2"><PenTool size={20}/> Podepsat a odeslat</button></div> :
+             <div className="text-blue-400 py-10 font-bold text-xl">Podpis úspěšně dokončen.</div>}
+          </div>
+        )}
+        {activeTab === 'zeroknowledge' && (
+          <div className="grid md:grid-cols-2 gap-8 animate-in fade-in">
+             <div className="border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-6"><h3 className="text-white font-bold mb-4 flex gap-2"><Laptop className="text-blue-500"/> Klientské zařízení</h3><div className="bg-[#0B1120] p-4 rounded-xl font-mono text-xs text-slate-300 h-40 whitespace-pre-wrap">{pipelineInput}</div><button onClick={executeCryptoPipeline} disabled={pipelineStep>0} className="w-full bg-blue-700 mt-6 py-3 rounded-xl font-bold text-sm">Zašifrovat lokálně</button></div>
+             <div className="border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-6"><h3 className="text-white font-bold mb-4 flex gap-2"><Server className="text-slate-500"/> Servery InLoopID</h3><div className="bg-[#0B1120] p-4 rounded-xl font-mono text-xs text-emerald-500 h-40 break-all">{pipelineStep===0 ? "// Čekám..." : `U2FsdGVkX1+${payloadHex}A7B9F`}</div></div>
+          </div>
+        )}
+        {activeTab === 'capsule' && (
+          <div className="border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-10 text-center animate-in fade-in">
+            <Archive size={48} className="mx-auto text-blue-500 mb-4"/>
+            <h3 className="text-2xl font-bold text-white mb-4">Shamir's Secret Sharing</h3>
+            <p className="text-slate-400 max-w-md mx-auto mb-8">Při generování archivu je hlavní dešifrovací klíč rozdělen metodou 2-ze-3 mezi vedení firmy. Nezávislost na cloudu je zaručena.</p>
+            <div className="flex justify-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-[#0B1120] border border-blue-800 flex items-center justify-center text-blue-400 font-bold">CEO</div>
+              <div className="w-16 h-16 rounded-xl bg-[#0B1120] border border-emerald-800 flex items-center justify-center text-emerald-400 font-bold">HR</div>
+              <div className="w-16 h-16 rounded-xl bg-[#0B1120] border border-amber-800 flex items-center justify-center text-amber-400 font-bold">LAW</div>
+            </div>
+          </div>
+        )}
+        {activeTab === 'view' && (
+           <div className="border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-8 max-w-3xl mx-auto animate-in fade-in">
+             <div className="flex justify-between items-center mb-6"><h3 className="text-white font-bold text-xl">Slepý notář v praxi</h3><button onClick={()=>setShowEncrypted(!showEncrypted)} className="bg-[#0B1120] border border-blue-800 px-4 py-2 rounded-xl text-xs font-bold text-blue-300">{showEncrypted ? "Dešifrovat zobrazení" : "Zobrazit DB stav"}</button></div>
+             {showEncrypted ? <div className="bg-[#0B1120] p-6 rounded-xl font-mono text-emerald-500 text-xs break-all">U2FsdGVkX1+V0bW84YTM4OWI5NTRlM2M... [AES-256-GCM BLOB]</div> : <div className="bg-white p-8 rounded-xl text-[#0B1120] font-serif shadow-xl"><h4 className="text-center font-black mb-4">PRACOVNÍ SMLOUVA</h4><p className="text-sm">Mezi společností Firma a.s. a Karlem Novotným...</p></div>}
+           </div>
+        )}
+        {activeTab === 'audit' && (
+           <div className="border border-blue-900/30 rounded-3xl bg-[#111A3A]/30 p-8 max-w-2xl mx-auto text-center animate-in fade-in">
+              <Scale size={48} className="mx-auto text-emerald-500 mb-6"/>
+              <h3 className="text-2xl font-bold text-white mb-6">Právní verifikace</h3>
+              <button onClick={executeAuditEngine} disabled={auditStep>0} className="w-full bg-emerald-700 py-4 rounded-xl font-bold text-white mb-6">Ověřit integritu vůči Blockchainu</button>
+              <div className="space-y-3 text-left max-w-md mx-auto font-mono text-xs">
+                 <p className={auditStep>=1 ? "text-slate-300" : "text-slate-700"}>1. Získání lokálního hashe... {auditStep>1 && "OK"}</p>
+                 <p className={auditStep>=2 ? "text-slate-300" : "text-slate-700"}>2. Validace eIDAS TSA... {auditStep>2 && "OK"}</p>
+                 <p className={auditStep>=3 ? "text-amber-400" : "text-slate-700"}>3. Bitcoin OpenTimestamps Anchor... {auditStep>3 && "VERIFIED"}</p>
+              </div>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const LandingPage = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const scrollToDemo = (e) => {
+    e.preventDefault();
+    document.getElementById('demo-section').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden relative">
+      <div className="fixed top-0 left-0 w-full z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-sm h-20"></div>
+      <Link to="/" className="fixed z-[60] flex items-center gap-2 left-6 top-6">
+        <ShieldCheck className="text-blue-900" size={32} />
+        <span className="text-2xl font-black tracking-tighter text-[#0B1120]">INLOOP<span className="text-blue-600">ID</span></span>
+      </Link>
+      <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="fixed top-4 right-6 z-[60] p-3 bg-white/60 backdrop-blur-md text-slate-700 rounded-3xl border shadow-sm">
+        {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
+
+      <div className={`fixed inset-x-0 z-[45] bg-white/95 backdrop-blur-3xl flex flex-col items-center justify-start pt-32 gap-6 transition-all duration-300 h-screen top-0 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <Link to="/hr" onClick={() => setIsMenuOpen(false)} className="text-xl font-extrabold text-[#0B1120] hover:text-blue-600">Administrační portál</Link>
+        <Link to="/employee" onClick={() => setIsMenuOpen(false)} className="text-xl font-extrabold text-[#0B1120] hover:text-blue-600">Zaměstnanecký portál</Link>
+        <Link to="/b2b/register" onClick={() => setIsMenuOpen(false)} className="text-xl font-extrabold text-blue-700 mt-4">Založit firemní workspace</Link>
+      </div>
+
+      <div className="relative z-10 pt-40">
+        <section className="px-6 text-center max-w-5xl mx-auto space-y-8 pb-32">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold uppercase tracking-widest text-slate-600 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> Enterprise standard s nulovou znalostí
+          </div>
+          <h1 className="text-5xl md:text-8xl font-black tracking-tight leading-[1.05] text-[#0B1120]">Digitální suverenita <br/>pro korporátní HR</h1>
+          <p className="text-lg md:text-2xl text-slate-600 max-w-3xl mx-auto font-medium leading-relaxed">
+            Jediná platforma pro bezpečný onboarding, která neslibuje bezpečnost smluvně, ale vynucuje ji matematickou nedostupností dešifrovacích klíčů na straně provozovatele.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <Link to="/b2b/register" className="inline-block px-8 py-4 bg-[#0B1120] hover:bg-[#111A3A] text-white rounded-3xl font-bold shadow-xl transition-all text-base">Založit firemní účet</Link>
+            <button onClick={scrollToDemo} className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-700 hover:bg-blue-800 text-white rounded-3xl font-bold shadow-xl transition-all text-base"><Play size={18} className="fill-current" /> Vyzkoušet interaktivní simulátor</button>
+          </div>
+        </section>
+
+        <ROICalculator />
+        <UnifiedBentoGrid />
+        
+        <section className="py-24 px-4 flex justify-center" id="demo-section">
+          <div className="w-full max-w-5xl rounded-[2.5rem] bg-[#0B1120] overflow-hidden shadow-[0_30px_70px_rgba(11,17,32,0.4)] border border-blue-900/50">
+            <div className="h-14 bg-[#0A101D] border-b border-blue-900/30 flex items-center px-6 justify-between select-none">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div><div className="w-3 h-3 rounded-full bg-amber-500"></div><div className="w-3 h-3 rounded-full bg-emerald-500"></div></div>
+              <div className="text-xs text-slate-500 font-mono tracking-tight flex items-center gap-2"><Lock size={12}/> InLoopID_Enterprise_Demo</div>
+              <div className="w-16"></div>
+            </div>
+            <InteractiveDemo />
+          </div>
+        </section>
+
+        <section className="px-6 mb-24"><PitchDeck /></section>
+        <ProcessVisualization />
+        <CryptographicCapsulePR />
+
+        <section className="py-32 px-6 flex justify-center bg-slate-50">
+          <div className="relative overflow-hidden rounded-[3rem] max-w-4xl w-full shadow-2xl bg-[#0B1120] border border-blue-900/50">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/40 via-[#0B1120] to-[#0B1120]"></div>
+            <div className="relative h-full w-full p-12 md:p-20 text-center space-y-6">
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white">Vraťte své firmě digitální suverenitu</h2>
+              <p className="text-slate-400 max-w-md mx-auto text-sm md:text-base font-medium">Měníme paradigma vlastnictví dat. Neprodáváme cloudovou službu, prodáváme matematicky vynucené bezpečí.</p>
+              <Link to="/b2b/register" className="inline-block px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-3xl font-bold text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all mt-4">Začít používat InLoopID</Link>
+            </div>
+          </div>
+        </section>
+
+        <footer className="py-12 border-t border-slate-200 bg-white/50 text-center text-slate-500 text-xs font-semibold">
+          <p>© {new Date().getFullYear()} InLoopID Enterprise. Zabezpečené digitální HR ekosystémy. Všechna práva vyhrazena.</p>
+        </footer>
+      </div>
+    </div>
+  );
+};
