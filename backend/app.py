@@ -12,16 +12,14 @@ from models import db
 from extensions import migrate
 from authlib.integrations.flask_client import OAuth
 
-# Importujeme konfigurovaný celery objekt z celery_app
 from celery_app import celery
 
 load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+    CORS(app, resources={r"/api/*": {"origins": "*"}, r"/auth/*": {"origins": "*"}}, supports_credentials=True)
 
-    # Načtení centrální konfigurace
     from config import Config
     app.config.from_object(Config)
 
@@ -42,12 +40,15 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Lokální importy pro zamezení cirkulárních závislostí
     from routes import api_bp
     from hr_routes import hr_bp
+    from zk_routes import zk_bp
+    from mojeid_routes import auth_bp
 
     app.register_blueprint(api_bp)
     app.register_blueprint(hr_bp)
+    app.register_blueprint(zk_bp)
+    app.register_blueprint(auth_bp)
 
     @app.after_request
     def add_security_headers(response):

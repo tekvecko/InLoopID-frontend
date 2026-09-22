@@ -54,6 +54,17 @@ class VerifiableCredentialAnchor(db.Model):
     withdrawn_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
+class OIDCState(db.Model):
+    __tablename__ = 'oidc_states'
+    id = db.Column(db.Integer, primary_key=True)
+    state = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    flow_type = db.Column(db.String(50), nullable=False)  # 'challenge' nebo 'recovery'
+    tenant_id = db.Column(db.String(100), nullable=True)
+    email_hash = db.Column(db.String(64), nullable=True)
+    document_hash = db.Column(db.String(64), nullable=True)
+    is_used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+
 class BlindAuditLog(db.Model):
     __tablename__ = 'blind_audit_logs'
     id = db.Column(db.Integer, primary_key=True)
