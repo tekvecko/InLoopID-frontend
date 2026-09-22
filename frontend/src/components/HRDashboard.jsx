@@ -5,7 +5,7 @@ import { ShieldCheck, FileText, UploadCloud, Lock, AlertTriangle, Key, Upload, C
 import { decryptKeystore } from '../utils/cryptoEngine';
 import { notify } from './ToastManager';
 
-const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
 const safeFetch = async (url, options) => {
   const res = await fetch(url, options);

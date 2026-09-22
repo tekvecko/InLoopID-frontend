@@ -6,10 +6,11 @@ import { B2BRegister } from './components/B2BRegister';
 import { JoinCompany } from './components/JoinCompany';
 import { ToastManager } from './components/ToastManager';
 import { LandingPage } from './components/LandingPage';
+import { MojeIdCallback } from './components/MojeIdCallback';
 
 const GlobalNavigation = () => {
   const location = useLocation();
-  if (location.pathname === '/') return null;
+  if (location.pathname === '/' || location.pathname.startsWith('/auth/')) return null;
 
   return (
     <nav className="bg-white border-b border-slate-200 p-4">
@@ -31,7 +32,10 @@ const SessionGuard = ({ children }) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         const path = window.location.pathname;
-        if (path !== '/' && path !== '/b2b/register' && path !== '/hr' && path !== '/employee') {
+        const isWhitelisted = ['/', '/b2b/register', '/hr', '/employee'].includes(path) || 
+                              path.startsWith('/auth/') || 
+                              path.startsWith('/join/');
+        if (!isWhitelisted) {
            alert("Z bezpečnostních důvodů byla relace ukončena.");
            window.location.href = "/";
         }
@@ -61,6 +65,9 @@ function App() {
             <Route path="/hr" element={<HRDashboard />} />
             <Route path="/b2b/register" element={<B2BRegister />} />
             <Route path="/join/:tenant_id" element={<JoinCompany />} />
+            <Route path="/auth/mojeid/callback" element={<MojeIdCallback />} />
+            <Route path="/auth/recovery/callback" element={<MojeIdCallback />} />
+            <Route path="/auth/callback" element={<MojeIdCallback />} />
           </Routes>
         </div>
       </SessionGuard>

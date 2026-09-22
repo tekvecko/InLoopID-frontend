@@ -8,7 +8,7 @@ celery = Celery(
     'inloopid_tasks',
     broker=broker_url,
     backend=result_backend,
-    include=['tasks']
+    include=['zk_tasks']
 )
 
 celery.conf.update(
