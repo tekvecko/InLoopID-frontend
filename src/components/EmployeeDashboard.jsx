@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, FileText, X, User, Archive, AlertOctagon, PenTool, Download } from 'lucide-react';
 import { notify } from './ToastManager';
 
-const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
 export const EmployeeDashboard = () => {
   const [token, setToken] = useState(null);

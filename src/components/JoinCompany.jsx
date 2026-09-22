@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Building, ShieldCheck, CheckCircle, Lock, Cpu, Fingerprint, Activity } from 'lucide-react';
 import { notify } from './ToastManager';
 
-const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
 export const JoinCompany = () => {
   const { tenant_id } = useParams();

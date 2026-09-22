@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { ShieldCheck, Fingerprint, Lock, FileText, CheckCircle, Clock, Eye, AlertCircle, LogOut, User } from 'lucide-react';
 
-const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
 export const EmployeePortal = () => {
     const location = useLocation();

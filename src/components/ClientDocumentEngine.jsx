@@ -6,7 +6,7 @@ import { ContractTemplate } from './ContractTemplate';
 import { generateRSAKeyPair, generateSigningKeyPair, generateAESKey, hashDocument, encryptDocument, wrapKey, exportPublicKeyJWK, bufferToBase64 } from '../utils/cryptoEngine';
 import { saveIdentity, getAllIdentities } from '../utils/idbStorage';
 
-const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
 export const ClientDocumentEngine = () => {
   const [status, setStatus] = useState('idle');

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Building, Key, CheckCircle, Copy, ArrowRight, AlertTriangle, CreditCard, Check, Zap } from 'lucide-react';
 import { generateRSAKeyPair, exportPublicKeyJWK, exportPrivateKeyJWK, encryptKeystore } from '../utils/cryptoEngine';
 
-const BACKEND_URL = `http://${window.location.hostname}:5000/api/v1`;
+import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
 export const B2BRegister = () => {
   const [step, setStep] = useState(1);
