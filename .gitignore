@@ -25,3 +25,6 @@ npm-debug.log*
 *.log
 .preprod_archive_*
 prepare_clean_preprod.sh
+
+.env
+.env.local
