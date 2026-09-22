@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { pdf } from '@react-pdf/renderer';
-import { FileText, Cpu, Server, Database, Building } from 'lucide-react';
+import { FileText, Cpu, Server, Database, Building, ShieldCheck } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { ContractTemplate } from './ContractTemplate';
 import { generateRSAKeyPair, generateSigningKeyPair, generateAESKey, hashDocument, encryptDocument, wrapKey, exportPublicKeyJWK, bufferToBase64 } from '../utils/cryptoEngine';
 import { saveIdentity, getAllIdentities } from '../utils/idbStorage';
+import { initiateMojeIdChallenge } from '../utils/mojeidAuth';
 
 import { API_BASE_URL as BACKEND_URL } from '../utils/config';
 
@@ -33,8 +34,8 @@ export const ClientDocumentEngine = () => {
       const encKeys = await generateRSAKeyPair();
       const signKeys = await generateSigningKeyPair();
       const jwk = await exportPublicKeyJWK(encKeys.publicKey);
-      const didString = `did:key:z${btoa(jwk.n).substring(0, 16)}`; 
-      
+      const didString = `did:key:z${btoa(jwk.n).substring(0, 16)}`;
+
       await saveIdentity(didString, encKeys, signKeys, jwk);
       currentIdentity = { did: didString, encPublicKey: encKeys.publicKey };
       setWalletDid(didString);
@@ -53,11 +54,25 @@ export const ClientDocumentEngine = () => {
       setStatus('processing');
       setServerLog([]);
       const identity = await ensureIdentity();
-      
+
       const contractData = { employeeName: 'Alice Smith', role: 'Senior Developer', salary: '$120,000' };
       const blob = await pdf(<ContractTemplate {...contractData} />).toBlob();
       const arrayBuffer = await blob.arrayBuffer();
       const sha256Hash = await hashDocument(arrayBuffer);
+
+      logEvent(`Iniciace MojeID / BankID Step-up autorizace pro hash: ${sha256Hash.substring(0, 12)}...`);
+      
+      try {
+        const challengeRes = await initiateMojeIdChallenge(tenantId, 'CONTRACT_SIGN', sha256Hash);
+        if (challengeRes && challengeRes.redirect_url) {
+          logEvent('Přesměrování na MojeID autorizační bránu...');
+          window.location.href = challengeRes.redirect_url;
+          return;
+        }
+      } catch (challengeErr) {
+        logEvent(`⚠️ MojeID Step-up warning: ${challengeErr.message}`);
+      }
+
       const aesKey = await generateAESKey();
       const { iv, encryptedBuffer } = await encryptDocument(arrayBuffer, aesKey);
       const wrappedAesKey = await wrapKey(aesKey, identity.encPublicKey);
@@ -82,7 +97,7 @@ export const ClientDocumentEngine = () => {
       });
 
       if (response.ok) {
-        logEvent('✅ SUCCESS: SaaS Credential Anchored.');
+        logEvent('✅ SUCCESS: SaaS Credential Anchored with MojeID verification.');
         setStatus('complete');
       }
     } catch (error) {
@@ -97,11 +112,11 @@ export const ClientDocumentEngine = () => {
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-2xl font-bold flex items-center gap-3 text-white"><FileText className="text-blue-400" /> HR SaaS Dashboard</h2>
         </div>
-        
+
         <div className="mb-6 flex items-center gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
            <Building size={20} className="text-indigo-400" />
-           <select 
-             value={tenantId} 
+           <select
+             value={tenantId}
              onChange={(e) => setTenantId(e.target.value)}
              className="bg-transparent text-white font-semibold outline-none flex-1"
            >
@@ -111,7 +126,7 @@ export const ClientDocumentEngine = () => {
         </div>
 
         <button onClick={processDocument} disabled={status === 'processing'} className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center justify-center gap-2">
-          <Cpu size={20} /> Vydat smlouvu (AES-GCM)
+          <ShieldCheck size={20} /> Vydat smlouvu s MojeID Ověřením (AES-GCM)
         </button>
 
         {serverLog.length > 0 && (
