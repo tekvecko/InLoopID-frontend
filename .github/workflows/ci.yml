@@ -1,0 +1,41 @@
+name: InLoopID CI Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  backend-and-rust-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          cd backend
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt || pip install flask flask-cors celery redis waitress
+
+      - name: Set up Rust (pro inloopid-core)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Run Rust Tests
+        run: |
+          if [ -d "inloopid-core" ]; then
+            cd inloopid-core
+            cargo test --release
+          else
+            echo "Rust core directory not found, skipping cargo test."
+          fi
