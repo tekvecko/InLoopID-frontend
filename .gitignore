@@ -1,30 +1,23 @@
-# Prostředí a tajemství
-.env
-.env.*
-!.env.example
-
-# Databáze
-*.db
-*.sqlite3
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# Python & Virtual Environment
 venv/
-env/
+__pycache__/
+*.pyc
 
-# Node.js / React
-node_modules/
-dist/
-build/
-npm-debug.log*
-
-# Operační systém a logy
-.DS_Store
+# Runtime PID files and logs
+backend/run/
 *.log
-.preprod_archive_*
-prepare_clean_preprod.sh
+*.pid
 
-.env
-.env.local
+# Rust build artifacts
+inloopid-core/target/
+
+# Sensitive environment variables & local DBs
+*.env
+*.env.*
+*.db
+*.sqlite
+*.sqlite3
+instance/
+dump.rdb
+backend/dump.rdb
+.preprod_archive_*/
