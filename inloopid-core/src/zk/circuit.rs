@@ -13,7 +13,7 @@ impl CredentialCircuit {
         let mut hasher = Sha256::new();
         hasher.update(&attribute_data);
         let attribute_hash = hasher.finalize().to_vec();
-        
+
         // Predikát: ověření splnění prahové hodnoty
         let is_valid = threshold >= 18;
         Self {
@@ -37,4 +37,40 @@ impl CredentialCircuit {
 
 pub fn verify_credential_proof(proof: &[u8], expected_hash: &[u8]) -> bool {
     !proof.is_empty() && !expected_hash.is_empty()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_credential_circuit_valid_threshold() {
+        let circuit = CredentialCircuit::new(b"user_birth_date_2000".to_vec(), 21);
+        assert!(circuit.is_valid);
+
+        let proof = circuit.prove();
+        assert!(proof.is_ok());
+        let proof_bytes = proof.unwrap();
+        assert!(!proof_bytes.is_empty());
+
+        let is_verified = verify_credential_proof(&proof_bytes, &circuit.attribute_hash);
+        assert!(is_verified);
+    }
+
+    #[test]
+    fn test_credential_circuit_underage_threshold() {
+        let circuit = CredentialCircuit::new(b"user_birth_date_2012".to_vec(), 14);
+        assert!(!circuit.is_valid);
+
+        let proof = circuit.prove();
+        assert!(proof.is_err());
+        assert_eq!(proof.unwrap_err(), "Predikát selhal: věková hranice nesplněna.");
+    }
+
+    #[test]
+    fn test_verify_credential_proof_empty_inputs() {
+        assert!(!verify_credential_proof(&[], b"hash"));
+        assert!(!verify_credential_proof(b"proof", &[]));
+        assert!(!verify_credential_proof(&[], &[]));
+    }
 }

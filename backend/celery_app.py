@@ -2,7 +2,6 @@ import os
 import sys
 from celery import Celery
 
-# Přidání složky backend do sys.path pro spolehlivý import modulů
 backend_dir = os.path.dirname(os.path.abspath(__file__))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
@@ -14,7 +13,7 @@ celery = Celery(
     'inloopid_tasks',
     broker=broker_url,
     backend=result_backend,
-    include=['zk_tasks']
+    include=['zk_tasks', 'hr_tasks']
 )
 
 celery.conf.update(

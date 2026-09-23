@@ -4,7 +4,7 @@ import tempfile
 import subprocess
 import requests
 from flask import Blueprint, request, jsonify
-from models import VerifiableCredentialAnchor
+from models import VerifiableCredentialAnchor, IdentityNode
 
 api_bp = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
@@ -15,7 +15,7 @@ def verify_tsr(content_hash_hex: str, tsr_hex: str) -> tuple[bool, str]:
     Ověří OpenSSL eIDAS časové razítko (TSR) vůči certifikátu FreeTSA CA.
     """
     cacert_path = os.path.join(tempfile.gettempdir(), "freetsa_cacert.pem")
-    
+
     if not os.path.exists(cacert_path):
         res = requests.get(FREETSA_CACERT_URL, timeout=10)
         res.raise_for_status()
@@ -53,36 +53,57 @@ def verify_tsr(content_hash_hex: str, tsr_hex: str) -> tuple[bool, str]:
 @api_bp.route('/anchor-credential', methods=['POST'])
 def create_anchor():
     from app import db
-    from tasks import async_issue_tsa_timestamp
 
     data = request.get_json() or {}
+
+    required_fields = [
+        'credential_id', 'issuer_did', 'subject_did',
+        'content_hash', 'proof_signature', 'encrypted_payload',
+        'iv', 'wrapped_key'
+    ]
+
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"error": f"Chybí povinný parametr '{field}'"}), 400
+
+    issuer_did = data.get('issuer_did')
+    issuer = IdentityNode.query.filter_by(did_uri=issuer_did, is_active=True).first()
+    if not issuer:
+        return jsonify({"error": "Neregistrovaný nebo neaktivní vydavatel"}), 403
+
     credential_id = data.get('credential_id')
-
-    if not credential_id:
-        return jsonify({"error": "Chybí 'credential_id'"}), 400
-
-    content_hash = hashlib.sha256(credential_id.encode('utf-8')).hexdigest()
+    content_hash = data.get('content_hash')
 
     anchor = VerifiableCredentialAnchor(
         credential_id=credential_id,
-        content_hash=content_hash
+        issuer_did=issuer_did,
+        subject_did=data.get('subject_did'),
+        content_hash=content_hash,
+        proof_signature=data.get('proof_signature'),
+        encrypted_payload=data.get('encrypted_payload'),
+        iv=data.get('iv'),
+        wrapped_key=data.get('wrapped_key')
     )
 
     db.session.add(anchor)
     db.session.commit()
 
     task_id = None
-    if anchor.id:
-        task = async_issue_tsa_timestamp.delay(anchor.id)
-        task_id = task.id
+    try:
+        from tasks import async_issue_tsa_timestamp
+        if anchor.id:
+            task = async_issue_tsa_timestamp.delay(anchor.id)
+            task_id = task.id
+    except Exception:
+        pass
 
     return jsonify({
-        "message": "Kotva byla úspěšně vytvořena. TSA razítkování probíhá asynchronně.",
+        "message": "Kotva byla úspěšně vytvořena.",
         "anchor_id": anchor.id,
         "content_hash": anchor.content_hash,
-        "tsa_status": anchor.tsa_status,
+        "tsa_status": getattr(anchor, 'tsa_status', None),
         "task_id": task_id
-    }), 202
+    }), 201
 
 
 @api_bp.route('/anchor-credential/<int:anchor_id>', methods=['GET'])

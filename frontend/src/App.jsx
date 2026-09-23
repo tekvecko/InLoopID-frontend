@@ -7,6 +7,7 @@ import { JoinCompany } from './components/JoinCompany';
 import { ToastManager } from './components/ToastManager';
 import { LandingPage } from './components/LandingPage';
 import { MojeIdCallback } from './components/MojeIdCallback';
+import HRContracts from './components/HRContracts';
 
 const GlobalNavigation = () => {
   const location = useLocation();
@@ -18,6 +19,7 @@ const GlobalNavigation = () => {
         <Link to="/" className="text-slate-900 font-bold text-xl tracking-tight">INLOOP<span className="text-blue-600">ID</span></Link>
         <div className="flex gap-8">
            <Link to="/hr" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Administrační portál</Link>
+           <Link to="/hr/contracts" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">HR Smlouvy & VC</Link>
            <Link to="/employee" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">Zaměstnanecký portál</Link>
         </div>
       </div>
@@ -32,8 +34,8 @@ const SessionGuard = ({ children }) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         const path = window.location.pathname;
-        const isWhitelisted = ['/', '/b2b/register', '/hr', '/employee'].includes(path) || 
-                              path.startsWith('/auth/') || 
+        const isWhitelisted = ['/', '/b2b/register', '/hr', '/hr/contracts', '/employee'].includes(path) ||
+                              path.startsWith('/auth/') ||
                               path.startsWith('/join/');
         if (!isWhitelisted) {
            alert("Z bezpečnostních důvodů byla relace ukončena.");
@@ -63,6 +65,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/employee" element={<EmployeePortal />} />
             <Route path="/hr" element={<HRDashboard />} />
+            <Route path="/hr/contracts" element={<HRContracts />} />
             <Route path="/b2b/register" element={<B2BRegister />} />
             <Route path="/join/:tenant_id" element={<JoinCompany />} />
             <Route path="/auth/mojeid/callback" element={<MojeIdCallback />} />

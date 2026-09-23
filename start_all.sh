@@ -15,7 +15,7 @@ fi
 
 echo "=== [2/4] Spuštění Celery Workeru ==="
 cd "$BACKEND_DIR"
-nohup ./venv/bin/celery -A celery_app.celery worker -n worker1@%h --loglevel=info > "$BACKEND_DIR/celery.log" 2>&1 &
+nohup python3 -m celery -A celery_app.celery worker -n worker1@%h --loglevel=info > "$BACKEND_DIR/celery.log" 2>&1 &
 CELERY_PID=$!
 echo "✓ Celery worker spuštěn na pozadí (PID: $CELERY_PID, log: backend/celery.log)"
 

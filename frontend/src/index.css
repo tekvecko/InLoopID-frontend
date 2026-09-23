@@ -1,6 +1,8 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
+:root {
   --color-glass: rgba(255, 255, 255, 0.05);
   --color-glassBorder: rgba(255, 255, 255, 0.1);
 }

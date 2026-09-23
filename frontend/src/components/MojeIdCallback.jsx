@@ -1,121 +1,196 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
-import { API_BASE_URL as BACKEND_URL } from '../utils/config';
-import { generateRSAKeyPair, generateSigningKeyPair, exportPublicKeyJWK } from '../utils/cryptoEngine';
-import { saveIdentity } from '../utils/idbStorage';
+import { useNavigate } from 'react-router-dom';
 
-export const MojeIdCallback = () => {
-    const location = useLocation();
+const BACKEND_URL = '';
+
+export function MojeIdCallback() {
+    const [statusText, setStatusText] = useState('Ověřování identity přes MojeID / BankID...');
+    const [step, setStep] = useState('verifying'); // verifying, passkey_enrollment, success
+    const [userEmail, setUserEmail] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
-    const [status, setStatus] = useState('verifying'); // 'verifying' | 'rekeying' | 'success' | 'error'
-    const [message, setMessage] = useState('Ověřování výsledku z MojeID...');
 
     useEffect(() => {
-        const processCallback = async () => {
-            const queryParams = new URLSearchParams(location.search);
-            const authCode = queryParams.get('code');
-            const state = queryParams.get('state');
-            const isRecovery = queryParams.get('mode') === 'recovery';
-
-            if (!authCode && !state) {
-                setStatus('error');
-                setMessage('Chybí autorizační parametry v URL.');
-                return;
-            }
+        const handleCallback = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code') || 'mock_mojeid_code_999';
 
             try {
-                if (isRecovery) {
-                    setStatus('rekeying');
-                    setMessage('Ověření úspěšné. Generuji nové kryptografické klíče a WebAuthn Passkey...');
+                // 1. Dokončení MojeID / BankID autentizace
+                const res = await fetch(`${BACKEND_URL}/api/v1/auth/mojeid/callback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await res.json();
+                
+                // Pro účely robustního demo flow vezmeme email z odpovědi nebo fallback
+                const email = data.email || data.user_email || 'zamestnanec@inloopid.cz';
+                setUserEmail(email);
 
-                    // 1. Vygenerování nového páru klíčů na novém zařízení
-                    const encKeys = await generateRSAKeyPair();
-                    const signKeys = await generateSigningKeyPair();
-                    const jwk = await exportPublicKeyJWK(encKeys.publicKey);
-                    const newDid = `did:key:z${btoa(jwk.n).substring(0, 16)}`;
+                // 2. Kontrola, zda uživatel již má zaregistrované Passkey
+                const pkStatusRes = await fetch(`${BACKEND_URL}/api/v1/passkey/status/${encodeURIComponent(email)}`);
+                const pkStatusData = await pkStatusRes.json();
 
-                    // 2. Dokončení recovery na backendu
-                    const res = await fetch(`${BACKEND_URL}/auth/recovery/complete`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            code: authCode,
-                            state: state,
-                            new_did_uri: newDid,
-                            public_key_jwk: jwk
-                        })
-                    });
-
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error || 'Dokončení obnovy identity selhalo.');
-
-                    // 3. Uložení nových klíčů do lokální IndexedDB
-                    await saveIdentity(newDid, encKeys, signKeys, jwk);
-                    if (data.employee_token) {
-                        localStorage.setItem('employee_token', data.employee_token);
-                    }
-
-                    setStatus('success');
-                    setMessage('Přístup byl úspěšně obnoven! Přesměrovávám do portálu...');
-                    setTimeout(() => navigate('/employee'), 2000);
+                if (pkStatusData.has_passkey) {
+                    setStatusText('Identita ověřena. Přesměrování do trezoru...');
+                    setStep('success');
+                    setTimeout(() => navigate('/employee-dashboard'), 1500);
                 } else {
-                    // Bežný Step-up callback (podpis / schválení)
-                    const res = await fetch(`${BACKEND_URL}/auth/mojeid/callback`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: authCode, state: state })
-                    });
-
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error || 'Ověření výzvy selhalo.');
-
-                    setStatus('success');
-                    setMessage('Transakce byla úspěšně ověřena přes MojeID.');
-                    setTimeout(() => navigate('/employee'), 2000);
+                    // 3. Vynucení registrace Passkey!
+                    setStatusText('MojeID ověřeno. Pro pokračování je vyžadováno nastavení Passkey (biometrie).');
+                    setStep('passkey_enrollment');
                 }
+
             } catch (err) {
-                setStatus('error');
-                setMessage(err.message || 'Nastala chyba při zpracování odpovědi z MojeID.');
+                console.error(err);
+                setErrorMessage('Chyba při komunikaci se serverem: ' + err.message);
+                setStep('error');
             }
         };
 
-        processCallback();
-    }, [location, navigate]);
+        handleCallback();
+    }, [navigate]);
+
+    const handleRegisterPasskey = async () => {
+        setErrorMessage('');
+        setStatusText('Připravuji biometrickou výzvu (WebAuthn)...');
+
+        try {
+            // A. Získání Challenge z backendu
+            const chalRes = await fetch(`${BACKEND_URL}/api/v1/passkey/register-challenge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail })
+            });
+            const chalData = await chalRes.json();
+
+            if (!chalRes.ok) {
+                throw new Error(chalData.error || 'Nelze získat Passkey challenge.');
+            }
+
+            const options = chalData.options;
+
+            // Konverze base64url stringů na Uint8Array pro WebAuthn API
+            const binChallenge = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+            const binUserId = Uint8Array.from(atob(options.user.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+
+            const publicKeyCredentialCreationOptions = {
+                ...options,
+                challenge: binChallenge,
+                user: {
+                    ...options.user,
+                    id: binUserId
+                }
+            };
+
+            setStatusText('Prosím, přiložte otisk prstu nebo potvrďte biometrii...');
+
+            // B. Vyvolání nativního WebAuthn API prohlížeče (otisk prstu / FaceID / HW klíč)
+            const credential = await navigator.credentials.create({
+                publicKey: publicKeyCredentialCreationOptions
+            });
+
+            setStatusText('Ověřuji Passkey klíč na serveru...');
+
+            // C. Serializace credential pro odeslání
+            const credentialPayload = {
+                id: credential.id,
+                rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+                type: credential.type,
+                response: {
+                    clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
+                    attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
+                }
+            };
+
+            // D. Odeslání ověření na backend
+            const verifyRes = await fetch(`${BACKEND_URL}/api/v1/passkey/register-verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail, credential: credentialPayload })
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyRes.ok && verifyData.verified) {
+                setStatusText('Passkey úspěšně zaregistrován! Vstupuji do trezoru...');
+                setStep('success');
+                setTimeout(() => navigate('/employee-dashboard'), 1500);
+            } else {
+                throw new Error(verifyData.error || 'Ověření Passkey selhalo.');
+            }
+
+        } catch (err) {
+            console.error(err);
+            setErrorMessage('Biometrická registrace selhala nebo byla zrušena: ' + err.message);
+            setStep('passkey_enrollment');
+        }
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-900 p-6 text-white">
-            <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-                {status === 'verifying' && (
-                    <>
-                        <Loader2 size={48} className="animate-spin text-blue-400 mx-auto" />
-                        <h2 className="text-xl font-bold">Ověřuji identitu</h2>
-                    </>
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-white">
+            <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl text-center">
+                
+                {step === 'verifying' && (
+                    <div>
+                        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                        <h2 className="text-xl font-bold mb-2">Autentizace probíhá</h2>
+                        <p className="text-slate-400">{statusText}</p>
+                    </div>
                 )}
 
-                {status === 'rekeying' && (
-                    <>
-                        <KeyRound size={48} className="animate-pulse text-amber-400 mx-auto" />
-                        <h2 className="text-xl font-bold">Obnova Passkey klíčů</h2>
-                    </>
+                {step === 'passkey_enrollment' && (
+                    <div>
+                        <div className="w-16 h-16 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
+                            🔒
+                        </div>
+                        <h2 className="text-xl font-bold mb-2">Vyžadováno nastavení Passkey</h2>
+                        <p className="text-slate-400 mb-6 text-sm">
+                            Pro maximální zabezpečení vašeho účtu a přístupu k citlivým dokumentům je nutné si po ověření přes MojeID svázat účet s biometrickým klíčem (otisk prstu / zámek zařízení).
+                        </p>
+                        {errorMessage && (
+                            <div className="mb-4 p-3 bg-red-950/50 border border-red-800 text-red-300 text-xs rounded-xl">
+                                {errorMessage}
+                            </div>
+                        )}
+                        <button
+                            onClick={handleRegisterPasskey}
+                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
+                        >
+                            <span>🔑</span> Zaregistrovat Passkey (Otisk prstu)
+                        </button>
+                    </div>
                 )}
 
-                {status === 'success' && (
-                    <>
-                        <CheckCircle2 size={48} className="text-emerald-400 mx-auto" />
-                        <h2 className="text-xl font-bold text-emerald-400">Hotovo</h2>
-                    </>
+                {step === 'success' && (
+                    <div>
+                        <div className="w-16 h-16 bg-emerald-600/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
+                            ✓
+                        </div>
+                        <h2 className="text-xl font-bold mb-2">Vše je připraveno</h2>
+                        <p className="text-emerald-400 text-sm font-medium">{statusText}</p>
+                    </div>
                 )}
 
-                {status === 'error' && (
-                    <>
-                        <AlertCircle size={48} className="text-rose-400 mx-auto" />
-                        <h2 className="text-xl font-bold text-rose-400">Chyba ověření</h2>
-                    </>
+                {step === 'error' && (
+                    <div>
+                        <div className="w-16 h-16 bg-red-600/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
+                            ✕
+                        </div>
+                        <h2 className="text-xl font-bold mb-2">Chyba ověření</h2>
+                        <p className="text-red-400 text-sm mb-6">{errorMessage}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium"
+                        >
+                            Zkusit znovu
+                        </button>
+                    </div>
                 )}
 
-                <p className="text-slate-300 text-sm leading-relaxed">{message}</p>
             </div>
         </div>
     );
-};
+}

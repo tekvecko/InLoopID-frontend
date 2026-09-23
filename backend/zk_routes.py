@@ -12,11 +12,22 @@ zk_bp = Blueprint('zk_bp', __name__)
 @zk_bp.route('/api/v1/zk/prove', methods=['POST'])
 def api_generate_proof():
     data = request.get_json() or {}
-    attribute = data.get('attribute', 'default_citizen_identity')
-    threshold = int(data.get('threshold', 18))
     
+    # Validace povinných vstupů
+    circuit_id = data.get('circuit_id') or data.get('attribute')
+    inputs = data.get('inputs')
+    
+    if not circuit_id:
+        return jsonify({
+            "status": "error",
+            "message": "Chybí povinný parametr 'circuit_id' nebo 'attribute'."
+        }), 400
+
+    threshold = int(data.get('threshold', 18))
+    attribute_str = str(inputs) if inputs else str(circuit_id)
+
     # Spuštění úlohy asynchronně přes Celery/Redis
-    task = generate_rust_zk_proof_async.delay(attribute, threshold)
+    task = generate_rust_zk_proof_async.delay(attribute_str, threshold)
     return jsonify({
         "task_id": task.id,
         "status": "queued",
@@ -26,11 +37,17 @@ def api_generate_proof():
 @zk_bp.route('/api/v1/zk/verify', methods=['POST'])
 def api_verify_proof():
     data = request.get_json() or {}
-    attribute = data.get('attribute', '')
+    circuit_id = data.get('circuit_id') or data.get('attribute', '')
     threshold = int(data.get('threshold', 18))
-    commitment = data.get('commitment', '')
-    
-    task = verify_rust_zk_proof_async.delay(attribute, threshold, commitment)
+    commitment = data.get('commitment') or data.get('proof', '')
+
+    if not commitment:
+        return jsonify({
+            "status": "error",
+            "message": "Chybí povinný parametr 'commitment' nebo 'proof'."
+        }), 400
+
+    task = verify_rust_zk_proof_async.delay(str(circuit_id), threshold, str(commitment))
     return jsonify({
         "task_id": task.id,
         "status": "queued",
@@ -40,9 +57,15 @@ def api_verify_proof():
 @zk_bp.route('/api/v1/zk/tsa', methods=['POST'])
 def api_issue_tsa():
     data = request.get_json() or {}
-    commitment = data.get('commitment', '')
-    
-    task = issue_eidas_tsa_token_async.delay(commitment)
+    commitment = data.get('payload_hash') or data.get('commitment', '')
+
+    if not commitment:
+        return jsonify({
+            "status": "error",
+            "message": "Chybí povinný parametr 'payload_hash' nebo 'commitment'."
+        }), 400
+
+    task = issue_eidas_tsa_token_async.delay(str(commitment))
     return jsonify({
         "task_id": task.id,
         "status": "queued",

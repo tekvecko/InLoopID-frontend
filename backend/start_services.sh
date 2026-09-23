@@ -63,7 +63,7 @@ start_services() {
         echo "[INFO] Celery worker již běží (PID: $(cat "$CELERY_PID"))."
     else
         echo "[START] Spouštím Celery worker..."
-        nohup python3 -m celery -A celery_app.celery worker --loglevel=info > "$CELERY_LOG" 2>&1 &
+        source "$VENV_PATH/bin/activate" && cd "$PROJECT_DIR" && nohup celery -A celery_app:celery worker --loglevel=info -P solo > "$CELERY_LOG" 2>&1 &
         echo $! > "$CELERY_PID"
         sleep 2
         if is_running "$CELERY_PID"; then
@@ -107,7 +107,7 @@ stop_services() {
         kill "$(cat "$CELERY_PID")" 2>/dev/null || true
         rm -f "$CELERY_PID"
     fi
-    pkill -f "celery -A celery_app.celery" 2>/dev/null || true
+    pkill -f "celery -A celery_app:celery" 2>/dev/null || true
 
     # Zastavení Redis
     if is_running "$REDIS_PID"; then
