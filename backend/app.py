@@ -36,6 +36,8 @@ def create_app():
     from hr_routes import hr_bp
     from mojeid_routes import auth_bp
     from b2b_routes import b2b_bp
+    from verifier_gateway_routes import verifier_bp
+    from hr_compliance import hr_compliance_bp
 
     app.register_blueprint(zk_bp)
     app.register_blueprint(passkey_bp)
@@ -43,6 +45,8 @@ def create_app():
     app.register_blueprint(hr_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(b2b_bp)
+    app.register_blueprint(verifier_bp)
+    app.register_blueprint(hr_compliance_bp)
 
     with app.app_context():
         db.create_all()

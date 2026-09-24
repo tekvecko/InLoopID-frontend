@@ -1,25 +1,17 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  backend:
-    build: 
-      context: ./backend
+  inloopid:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inloopid_ubuntu_container
+    restart: unless-stopped
     ports:
       - "5000:5000"
+      - "3000:3000"
+    volumes:
+      - ./instance:/app/instance
     environment:
       - FLASK_ENV=production
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
+      - PYTHONUNBUFFERED=1

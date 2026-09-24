@@ -99,3 +99,38 @@ class Invitation(db.Model):
     token = db.Column(db.String(128), unique=True, nullable=False)
     status = db.Column(db.String(20), default='pending')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+
+# --- Automaticky přidané modely pro HR Compliance a e-podpisy (Zákoník práce ČR) ---
+
+class EmploymentContract(db.Model):
+    __tablename__ = 'employment_contracts'
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.String(100), db.ForeignKey('company_workspaces.tenant_id'), nullable=False, index=True)
+    employee_email_hash = db.Column(db.String(64), nullable=False, index=True)
+    contract_type = db.Column(db.String(50), default='pracovni_smlouva')
+    encrypted_payload = db.Column(db.Text, nullable=False)
+    iv = db.Column(db.String(50), nullable=False)
+    document_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    
+    employer_signed = db.Column(db.Boolean, default=False)
+    employer_signature_proof = db.Column(db.Text, nullable=True)
+    employee_signed = db.Column(db.Boolean, default=False)
+    employee_signature_proof = db.Column(db.Text, nullable=True)
+    
+    delivery_status = db.Column(db.String(50), default='pending_delivery')
+    delivered_at = db.Column(db.DateTime, nullable=True)
+    tsa_token_base64 = db.Column(db.Text, nullable=True)
+    retention_expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+
+class AttendanceRecord(db.Model):
+    __tablename__ = 'attendance_records'
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.String(100), nullable=False, index=True)
+    employee_email_hash = db.Column(db.String(64), nullable=False, index=True)
+    date = db.Column(db.Date, nullable=False, index=True)
+    hours_worked = db.Column(db.Float, default=8.0)
+    overtime_hours = db.Column(db.Float, default=0.0)
+    status = db.Column(db.String(50), default='present')
+    verified_by_manager = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))

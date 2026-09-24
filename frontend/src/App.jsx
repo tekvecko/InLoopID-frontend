@@ -8,6 +8,7 @@ import { ToastManager } from './components/ToastManager';
 import { LandingPage } from './components/LandingPage';
 import { MojeIdCallback } from './components/MojeIdCallback';
 import HRContracts from './components/HRContracts';
+import { VerifierPortal } from './components/VerifierPortal';
 
 const GlobalNavigation = () => {
   const location = useLocation();
@@ -21,6 +22,7 @@ const GlobalNavigation = () => {
            <Link to="/hr" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Administrační portál</Link>
            <Link to="/hr/contracts" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">HR Smlouvy & VC</Link>
            <Link to="/employee" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">Zaměstnanecký portál</Link>
+           <Link to="/verifier" className="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Verifier Gateway</Link>
         </div>
       </div>
     </nav>
@@ -34,7 +36,7 @@ const SessionGuard = ({ children }) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         const path = window.location.pathname;
-        const isWhitelisted = ['/', '/b2b/register', '/hr', '/hr/contracts', '/employee'].includes(path) ||
+        const isWhitelisted = ['/', '/b2b/register', '/hr', '/hr/contracts', '/employee', '/verifier'].includes(path) ||
                               path.startsWith('/auth/') ||
                               path.startsWith('/join/');
         if (!isWhitelisted) {
@@ -64,6 +66,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/employee" element={<EmployeePortal />} />
+          <Route path="/verifier" element={<VerifierPortal />} />
             <Route path="/hr" element={<HRDashboard />} />
             <Route path="/hr/contracts" element={<HRContracts />} />
             <Route path="/b2b/register" element={<B2BRegister />} />
