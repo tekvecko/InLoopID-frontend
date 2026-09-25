@@ -48,11 +48,81 @@ class VerifiableCredentialAnchor(db.Model):
     eidas_tsr_base64 = db.Column(db.Text, nullable=True)
     timestamped_at = db.Column(db.DateTime, nullable=True)
     tsa_error = db.Column(db.Text, nullable=True)
+    tsa_verified_at = db.Column(db.DateTime, nullable=True)
+    tsa_response_sha256 = db.Column(db.String(64), nullable=True)
     status = db.Column(db.String(50), default='anchored')
     clearance_level = db.Column(db.String(50), default='standard')
     valid_until = db.Column(db.DateTime, nullable=True)
     withdrawn_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+
+class OutboxEvent(db.Model):
+    __tablename__ = "outbox_events"
+
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(
+        db.String(36),
+        unique=True,
+        nullable=False,
+    )
+    dedup_key = db.Column(
+        db.String(255),
+        unique=True,
+        nullable=False,
+    )
+    event_type = db.Column(
+        db.String(64),
+        nullable=False,
+        index=True,
+    )
+    aggregate_type = db.Column(
+        db.String(64),
+        nullable=False,
+    )
+    aggregate_id = db.Column(
+        db.Integer,
+        nullable=False,
+    )
+    payload_json = db.Column(
+        db.Text,
+        nullable=False,
+    )
+    status = db.Column(
+        db.String(32),
+        nullable=False,
+        default="PENDING",
+        index=True,
+    )
+    attempts = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+    available_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC).replace(
+            tzinfo=None
+        ),
+    )
+    dispatched_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+    completed_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+    last_error = db.Column(
+        db.Text,
+        nullable=True,
+    )
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
 
 class OIDCState(db.Model):
     __tablename__ = 'oidc_states'

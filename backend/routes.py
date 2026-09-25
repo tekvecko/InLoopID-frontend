@@ -8,46 +8,7 @@ from models import VerifiableCredentialAnchor, IdentityNode
 
 api_bp = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
-FREETSA_CACERT_URL = "https://www.freetsa.org/files/cacert.pem"
-
-def verify_tsr(content_hash_hex: str, tsr_hex: str) -> tuple[bool, str]:
-    """
-    Ověří OpenSSL eIDAS časové razítko (TSR) vůči certifikátu FreeTSA CA.
-    """
-    cacert_path = os.path.join(tempfile.gettempdir(), "freetsa_cacert.pem")
-
-    if not os.path.exists(cacert_path):
-        res = requests.get(FREETSA_CACERT_URL, timeout=10)
-        res.raise_for_status()
-        with open(cacert_path, "wb") as f:
-            f.write(res.content)
-
-    tmp_tsr_path = None
-    try:
-        tsr_bytes = bytes.fromhex(tsr_hex)
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".tsr") as tmp_tsr:
-            tmp_tsr.write(tsr_bytes)
-            tmp_tsr_path = tmp_tsr.name
-
-        cmd = [
-            "openssl", "ts", "-verify",
-            "-in", tmp_tsr_path,
-            "-digest", content_hash_hex,
-            "-CAfile", cacert_path
-        ]
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-        if result.returncode == 0 and "Verification: OK" in result.stdout:
-            return True, "Verification: OK"
-        else:
-            return False, f"STDOUT: {result.stdout.strip()} | STDERR: {result.stderr.strip()}"
-
-    except Exception as e:
-        return False, str(e)
-    finally:
-        if tmp_tsr_path and os.path.exists(tmp_tsr_path):
-            os.remove(tmp_tsr_path)
+from tsa_service import verify_tsr
 
 
 @api_bp.route('/anchor-credential', methods=['POST'])
@@ -67,9 +28,26 @@ def create_anchor():
             return jsonify({"error": f"Chybí povinný parametr '{field}'"}), 400
 
     issuer_did = data.get('issuer_did')
-    issuer = IdentityNode.query.filter_by(did_uri=issuer_did, is_active=True).first()
+    issuer = IdentityNode.query.filter_by(
+        did_uri=issuer_did,
+        is_active=True,
+    ).first()
+
     if not issuer:
-        return jsonify({"error": "Neregistrovaný nebo neaktivní vydavatel"}), 403
+        return jsonify({
+            "error": "Neregistrovaný nebo neaktivní vydavatel"
+        }), 403
+
+    subject_did = data.get('subject_did')
+    subject = IdentityNode.query.filter_by(
+        did_uri=subject_did,
+        is_active=True,
+    ).first()
+
+    if not subject:
+        return jsonify({
+            "error": "Neregistrovaný nebo neaktivní subjekt"
+        }), 403
 
     credential_id = data.get('credential_id')
     content_hash = data.get('content_hash')
@@ -77,7 +55,7 @@ def create_anchor():
     anchor = VerifiableCredentialAnchor(
         credential_id=credential_id,
         issuer_did=issuer_did,
-        subject_did=data.get('subject_did'),
+        subject_did=subject_did,
         content_hash=content_hash,
         proof_signature=data.get('proof_signature'),
         encrypted_payload=data.get('encrypted_payload'),
@@ -89,19 +67,38 @@ def create_anchor():
     db.session.commit()
 
     task_id = None
+    tsa_task_queued = False
+
     try:
-        from tasks import async_issue_tsa_timestamp
+        from anchor_tasks import issue_anchor_tsa_timestamp
+
         if anchor.id:
-            task = async_issue_tsa_timestamp.delay(anchor.id)
+            task = issue_anchor_tsa_timestamp.delay(
+                anchor.id
+            )
+
             task_id = task.id
+            tsa_task_queued = True
+
     except Exception:
-        pass
+        # Kotva už byla vytvořena, proto ji nemažeme.
+        # Selhání dispatchu ale nesmí zůstat skryté.
+        anchor.tsa_status = "FAILED"
+        anchor.tsa_error = "TSA task dispatch failed"
+        db.session.commit()
+
+        import logging
+        logging.getLogger(__name__).exception(
+            "Nepodařilo se zařadit TSA task pro anchor ID %s",
+            anchor.id,
+        )
 
     return jsonify({
         "message": "Kotva byla úspěšně vytvořena.",
         "anchor_id": anchor.id,
         "content_hash": anchor.content_hash,
         "tsa_status": getattr(anchor, 'tsa_status', None),
+        "tsa_task_queued": tsa_task_queued,
         "task_id": task_id
     }), 201
 

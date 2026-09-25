@@ -21,12 +21,31 @@ def handle_contracts():
         if not email or not encrypted_payload or not content_hash:
             return jsonify({"error": "Missing required fields (email, encrypted_payload, content_hash)"}), 400
 
+        subject_did = f"did:inloopid:{email}"
+
+        subject = IdentityNode.query.filter_by(
+            tenant_id=tenant_id,
+            did_uri=subject_did,
+            is_active=True,
+        ).first()
+
+        if not subject:
+            return jsonify({
+                "status": "error",
+                "error": "EMPLOYEE_IDENTITY_NOT_FOUND",
+                "message": (
+                    "Pro zaměstnance neexistuje aktivní "
+                    "IdentityNode v daném tenantu."
+                ),
+                "subject_did": subject_did,
+            }), 409
+
         credential_id = f"contract-{uuid.uuid4()}"
 
         anchor = VerifiableCredentialAnchor(
             tenant_id=tenant_id,
             credential_id=credential_id,
-            subject_did=f"did:inloopid:{email}",
+            subject_did=subject_did,
             content_hash=content_hash,
             encrypted_payload=encrypted_payload,
             iv=data.get('iv', 'mock_iv'),
@@ -104,29 +123,65 @@ def get_contract_detail(credential_id):
 
 @hr_bp.route('/api/v1/hr/contracts/<credential_id>/approve', methods=['POST'])
 def approve_contract(credential_id):
-    anchor = VerifiableCredentialAnchor.query.filter_by(credential_id=credential_id).first()
-    if not anchor:
-        return jsonify({"status": "error", "message": "Smlouva nenalezena"}), 404
+    from outbox_service import ensure_outbox_event
 
-    anchor.status = 'PROCESSING'
-    anchor.tsa_status = 'IN_PROGRESS'
-    db.session.commit()
+    anchor = VerifiableCredentialAnchor.query.filter_by(
+        credential_id=credential_id
+    ).first()
+
+    if not anchor:
+        return jsonify({
+            "status": "error",
+            "message": "Smlouva nenalezena",
+        }), 404
+
+    if (
+        anchor.status == "ISSUED"
+        and anchor.tsa_status == "COMPLETED"
+    ):
+        return jsonify({
+            "status": "success",
+            "message": "Smlouva již byla vydána.",
+            "credential_id": credential_id,
+            "already_completed": True,
+        }), 200
+
+    anchor.status = "PROCESSING"
+
+    if anchor.tsa_status != "COMPLETED":
+        anchor.tsa_status = "PENDING"
 
     try:
-        from hr_tasks import issue_hr_contract_vc_async
-        task = issue_hr_contract_vc_async.delay(credential_id)
-        task_id = task.id
-    except Exception as e:
-        anchor.status = 'FAILED'
-        anchor.tsa_error = f"Chyba při předání Celery: {str(e)}"
+        event = ensure_outbox_event(
+            session=db.session,
+            event_type="HR_ISSUE_REQUESTED",
+            aggregate_type="VerifiableCredentialAnchor",
+            aggregate_id=anchor.id,
+            dedup_key=f"hr-issue:{anchor.id}",
+            payload={
+                "credential_id": credential_id,
+            },
+        )
+
         db.session.commit()
-        return jsonify({"status": "error", "message": "Nepodařilo se naplánovat emisi VC", "error": str(e)}), 500
+
+    except Exception as exc:
+        db.session.rollback()
+
+        return jsonify({
+            "status": "error",
+            "message": "Nepodařilo se atomicky naplánovat emisi VC",
+            "error": str(exc),
+        }), 500
 
     return jsonify({
         "status": "success",
-        "message": "Smlouva byla schválena. Zahájena asynchronní emise a ukotvení Verifiable Credential.",
+        "message": (
+            "Smlouva byla schválena a atomicky "
+            "zařazena do outboxu."
+        ),
         "credential_id": credential_id,
-        "task_id": task_id
+        "outbox_event_id": event.event_id,
     }), 200
 
 

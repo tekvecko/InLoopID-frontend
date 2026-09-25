@@ -1,0 +1,871 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# INLOOPID_SECURE_RUNTIME_ENV_V1
+INLOOPID_SECURE_ENV="${INLOOPID_SECURE_ENV:-$HOME/.config/inloopid/runtime.env}"
+
+if [ -f "$INLOOPID_SECURE_ENV" ]; then
+    set -a
+    . "$INLOOPID_SECURE_ENV"
+    set +a
+fi
+
+set -Eeuo pipefail
+
+PROJECT="${INLOOPID_HOME:-$HOME/InloopID}"
+VENV="$PROJECT/.venv"
+PY="$VENV/bin/python"
+LIBPY="${PREFIX:?PREFIX is not set}/lib/libpython3.14.so"
+APP_PYTHONPATH="$PROJECT/backend:$PROJECT"
+
+RUNTIME="$PROJECT/.runtime"
+LOGDIR="$RUNTIME/logs"
+REDIS_DATA="$RUNTIME/redis-data"
+
+REDIS_HOST="${INLOOPID_REDIS_HOST:-127.0.0.1}"
+REDIS_PORT="${INLOOPID_REDIS_PORT:-6379}"
+
+RUNTIME_BROKER_URL="${INLOOPID_CELERY_BROKER_URL:-redis://$REDIS_HOST:$REDIS_PORT/1}"
+RUNTIME_RESULT_BACKEND="${INLOOPID_CELERY_RESULT_BACKEND:-redis://$REDIS_HOST:$REDIS_PORT/1}"
+RUNTIME_QUEUE="${INLOOPID_CELERY_QUEUE:-inloopid-runtime}"
+
+WEB_HOST="${INLOOPID_HOST:-127.0.0.1}"
+WEB_PORT="${INLOOPID_PORT:-8000}"
+
+REDIS_PIDFILE="$RUNTIME/redis.pid"
+REDIS_OWNERFILE="$RUNTIME/redis.owned"
+CELERY_PIDFILE="$RUNTIME/celery.pid"
+WEB_PIDFILE="$RUNTIME/web.pid"
+
+REDIS_LOG="$LOGDIR/redis.log"
+CELERY_LOG="$LOGDIR/celery.log"
+WEB_LOG="$LOGDIR/web.log"
+
+mkdir -p "$RUNTIME" "$LOGDIR" "$REDIS_DATA"
+
+say()  { printf '\n==> %s\n' "$*"; }
+ok()   { printf '[OK] %s\n' "$*"; }
+warn() { printf '[WARN] %s\n' "$*" >&2; }
+die()  { printf '[FAIL] %s\n' "$*" >&2; exit 1; }
+
+pid_alive() {
+    local f="$1" pid
+
+    [ -f "$f" ] || return 1
+
+    pid="$(cat "$f" 2>/dev/null || true)"
+
+    [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+
+    kill -0 "$pid" 2>/dev/null
+}
+
+cmdline_of() {
+    local pid="$1"
+
+    tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true
+}
+
+safe_stop_pidfile() {
+    local f="$1"
+    local needle="$2"
+    local label="$3"
+    local pid cmd i
+
+    [ -f "$f" ] || return 0
+
+    pid="$(cat "$f" 2>/dev/null || true)"
+
+    [[ "$pid" =~ ^[0-9]+$ ]] || {
+        rm -f "$f"
+        return 0
+    }
+
+    if ! kill -0 "$pid" 2>/dev/null; then
+        rm -f "$f"
+        return 0
+    fi
+
+    cmd="$(cmdline_of "$pid")"
+
+    case "$cmd" in
+        *"$needle"*)
+            ;;
+        *)
+            warn "$label PID $pid neodpovídá očekávanému procesu."
+            warn "Proces NEZASTAVUJI."
+            warn "cmdline: $cmd"
+            return 1
+            ;;
+    esac
+
+    kill -TERM "$pid" 2>/dev/null || true
+
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.5
+    done
+
+    if kill -0 "$pid" 2>/dev/null; then
+        warn "$label stále běží (PID $pid)."
+        warn "SIGKILL neposílám automaticky."
+        return 1
+    fi
+
+    rm -f "$f"
+
+    ok "$label zastaven."
+}
+
+redis_ping() {
+    redis-cli \
+        -h "$REDIS_HOST" \
+        -p "$REDIS_PORT" \
+        ping 2>/dev/null |
+        grep -qx PONG
+}
+
+celery_ping() {
+    env \
+        LD_PRELOAD="$LIBPY" \
+        PYTHONPATH="$APP_PYTHONPATH" \
+        CELERY_BROKER_URL="$RUNTIME_BROKER_URL" \
+        CELERY_RESULT_BACKEND="$RUNTIME_RESULT_BACKEND" \
+        CELERY_TASK_DEFAULT_QUEUE="$RUNTIME_QUEUE" \
+        "$PY" - <<'CELERY_PING_PY' >/dev/null 2>&1
+from celery_app import celery
+
+try:
+    replies = celery.control.ping(timeout=4.0)
+except Exception:
+    raise SystemExit(1)
+
+healthy = any(
+    isinstance(payload, dict)
+    and payload.get("ok") == "pong"
+    for reply in replies
+    if isinstance(reply, dict)
+    for payload in reply.values()
+)
+
+raise SystemExit(0 if healthy else 1)
+CELERY_PING_PY
+}
+
+web_http_ok() {
+    env -u PYTHONPATH \
+        "$PY" - \
+        "$WEB_HOST" \
+        "$WEB_PORT" <<'WEB_LIVE_PY' >/dev/null 2>&1
+import http.client
+import sys
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+try:
+    conn = http.client.HTTPConnection(
+        host,
+        port,
+        timeout=2,
+    )
+
+    conn.request(
+        "GET",
+        "/health/live",
+    )
+
+    response = conn.getresponse()
+    response.read()
+
+    raise SystemExit(
+        0 if response.status == 200 else 1
+    )
+
+except Exception:
+    raise SystemExit(1)
+WEB_LIVE_PY
+}
+
+
+web_ready_ok() {
+    env -u PYTHONPATH \
+        "$PY" - \
+        "$WEB_HOST" \
+        "$WEB_PORT" <<'WEB_READY_PY' >/dev/null 2>&1
+import http.client
+import sys
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+try:
+    conn = http.client.HTTPConnection(
+        host,
+        port,
+        timeout=5,
+    )
+
+    conn.request(
+        "GET",
+        "/health/ready",
+    )
+
+    response = conn.getresponse()
+    response.read()
+
+    raise SystemExit(
+        0 if response.status == 200 else 1
+    )
+
+except Exception:
+    raise SystemExit(1)
+WEB_READY_PY
+}
+
+
+port_open() {
+    env -u PYTHONPATH \
+        "$PY" - "$1" "$2" <<'PY' >/dev/null 2>&1
+import socket
+import sys
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+s = socket.socket()
+s.settimeout(0.4)
+
+try:
+    raise SystemExit(
+        0 if s.connect_ex((host, port)) == 0 else 1
+    )
+finally:
+    s.close()
+PY
+}
+
+find_baseline() {
+    find "$PROJECT/dependency-audit" \
+        -maxdepth 1 \
+        -type d \
+        -name 'dependency-baseline-*' \
+        2>/dev/null |
+    sort -r |
+    while IFS= read -r candidate; do
+
+        local manifest="$candidate/SHA256SUMS.txt"
+        local complete=1
+        local required
+
+        [ -f "$manifest" ] || continue
+
+        for required in \
+            requirements.in \
+            requirements.txt \
+            requirements-dev.in \
+            requirements-dev.txt \
+            test_lockfile_reproducibility.sh \
+            verify_and_lock_dependencies.sh
+        do
+            grep -Eq \
+                "[[:space:]]${required}$" \
+                "$manifest" || {
+                    complete=0
+                    break
+                }
+        done
+
+        if [ "$complete" -eq 1 ]; then
+            printf '%s\n' "$candidate"
+            break
+        fi
+    done
+}
+
+detect_celery_target() {
+    env \
+        LD_PRELOAD="$LIBPY" \
+        PYTHONPATH="$APP_PYTHONPATH" \
+        CELERY_BROKER_URL="$RUNTIME_BROKER_URL" \
+        CELERY_RESULT_BACKEND="$RUNTIME_RESULT_BACKEND" \
+        CELERY_TASK_DEFAULT_QUEUE="$RUNTIME_QUEUE" \
+        "$PY" - <<'PY'
+import importlib
+from celery import Celery
+
+for modname in (
+    "celery_app",
+    "app",
+    "tasks",
+    "hr_tasks",
+    "zk_tasks",
+):
+    try:
+        mod = importlib.import_module(modname)
+    except Exception:
+        continue
+
+    for attr in (
+        "celery",
+        "celery_app",
+        "app",
+    ):
+        obj = getattr(mod, attr, None)
+
+        if isinstance(obj, Celery):
+            print(f"{modname}:{attr}")
+            raise SystemExit(0)
+
+raise SystemExit(1)
+PY
+}
+
+preflight() {
+    local baseline
+    local target
+    local heads
+    local nheads
+
+    say "Preflight"
+
+    [ -x "$PY" ] ||
+        die "Chybí $PY"
+
+    [ -f "$LIBPY" ] ||
+        die "Chybí $LIBPY"
+
+    [ -f "$PROJECT/backend/app.py" ] ||
+        die "Chybí backend/app.py"
+
+    command -v redis-server >/dev/null ||
+        die "Chybí redis-server"
+
+    command -v redis-cli >/dev/null ||
+        die "Chybí redis-cli"
+
+    [ -x "$VENV/bin/celery" ] ||
+        die "Chybí Celery CLI"
+
+    [ -x "$VENV/bin/gunicorn" ] ||
+        die "Chybí Gunicorn"
+
+    baseline="$(find_baseline)"
+
+    [ -n "$baseline" ] ||
+        die "Nenalezena kompletní dependency baseline."
+
+    printf 'Baseline: %s\n' "$baseline"
+
+    (
+        cd "$baseline"
+        sha256sum -c SHA256SUMS.txt >/dev/null
+    ) ||
+        die "Baseline SHA-256 kontrola selhala."
+
+    for f in \
+        requirements.in \
+        requirements.txt \
+        requirements-dev.in \
+        requirements-dev.txt
+    do
+        cmp -s \
+            "$PROJECT/$f" \
+            "$baseline/$f" ||
+            die "$f se liší od uzavřené baseline."
+    done
+
+    ok "Aktuální dependency soubory odpovídají baseline."
+
+    env \
+        -u PYTHONPATH \
+        -u PYTHONHOME \
+        -u PYTHONUSERBASE \
+        PYTHONNOUSERSITE=1 \
+        "$PY" - <<'PY'
+import sys
+
+bad = [
+    p for p in sys.path
+    if "site-packages" in p
+    and not p.startswith(sys.prefix)
+]
+
+if bad:
+    raise SystemExit(
+        "External site-packages: " + repr(bad)
+    )
+
+print("PYTHON_ISOLATION_OK")
+PY
+
+    "$PY" -m pip check >/dev/null
+
+    ok "pip check PASS."
+
+    env \
+        LD_PRELOAD="$LIBPY" \
+        PYTHONPATH="$APP_PYTHONPATH" \
+        CELERY_BROKER_URL="$RUNTIME_BROKER_URL" \
+        CELERY_RESULT_BACKEND="$RUNTIME_RESULT_BACKEND" \
+        CELERY_TASK_DEFAULT_QUEUE="$RUNTIME_QUEUE" \
+        "$PY" - <<'PY'
+import app
+
+assert getattr(app, "app", None) is not None
+
+print("FLASK_IMPORT_OK")
+PY
+
+    target="$(detect_celery_target)" ||
+        die "Celery app target se nepodařilo detekovat."
+
+    printf 'Celery target: %s\n' "$target"
+
+    if [ -d "$PROJECT/migrations" ]; then
+
+        heads="$(
+            env \
+                LD_PRELOAD="$LIBPY" \
+                PYTHONPATH="$APP_PYTHONPATH" \
+                "$VENV/bin/flask" \
+                --app app \
+                db heads \
+                2>/dev/null || true
+        )"
+
+        [ -n "$heads" ] ||
+            die "Flask-Migrate heads nelze načíst."
+
+        printf '%s\n' "$heads"
+
+        nheads="$(
+            printf '%s\n' "$heads" |
+            grep -c '(head)' || true
+        )"
+
+        [ "$nheads" -eq 1 ] ||
+            die "Očekáván právě 1 migration head, nalezeno: $nheads"
+
+        ok "Migration head PASS."
+    fi
+
+    if ! pid_alive "$WEB_PIDFILE" &&
+       port_open "$WEB_HOST" "$WEB_PORT"
+    then
+        die "Port $WEB_HOST:$WEB_PORT už používá jiný proces."
+    fi
+
+    # INLOOPID_DATABASE_PREFLIGHT_GATE_V1
+    env LD_PRELOAD="${PREFIX:-/data/data/com.termux/files/usr}/lib/libpython3.14.so" DATABASE_URL="sqlite:///$HOME/InloopID/backend/inloopid_blind_notary.db" PYTHONPATH="$HOME/InloopID/backend:$HOME/InloopID" "$HOME/InloopID/.venv/bin/python" "$HOME/InloopID/backend/runtime_preflight_db.py"
+    ok "PREFLIGHT PASS"
+}
+
+start_redis() {
+    if redis_ping; then
+
+        if pid_alive "$REDIS_PIDFILE" &&
+           [ -f "$REDIS_OWNERFILE" ]
+        then
+            ok "Redis už běží a patří launcheru."
+        else
+            ok "Redis už běží externě; launcher ho nebude zastavovat."
+        fi
+
+        return 0
+    fi
+
+    say "Start Redis"
+
+    rm -f \
+        "$REDIS_PIDFILE" \
+        "$REDIS_OWNERFILE"
+
+    redis-server \
+        --bind "$REDIS_HOST" \
+        --port "$REDIS_PORT" \
+        --protected-mode yes \
+        --daemonize yes \
+        --appendonly yes \
+        --dir "$REDIS_DATA" \
+        --pidfile "$REDIS_PIDFILE" \
+        --logfile "$REDIS_LOG"
+
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+
+        if redis_ping; then
+            cp \
+                "$REDIS_PIDFILE" \
+                "$REDIS_OWNERFILE"
+
+            ok "Redis spuštěn."
+            return 0
+        fi
+
+        sleep 0.5
+    done
+
+    die "Redis se nepodařilo spustit. Viz $REDIS_LOG"
+}
+
+start_celery() {
+    local target
+
+    if pid_alive "$CELERY_PIDFILE"; then
+
+        if celery_ping; then
+            ok "Celery už běží a odpovídá (PID $(cat "$CELERY_PIDFILE"))."
+            return 0
+        fi
+
+        die "Celery PID $(cat "$CELERY_PIDFILE") běží, ale worker neodpovídá."
+    fi
+
+    say "Start Celery"
+
+    rm -f "$CELERY_PIDFILE"
+
+    target="$(detect_celery_target)" ||
+        die "Nelze detekovat Celery target."
+
+    (
+        cd "$PROJECT/backend"
+
+        exec env \
+            LD_PRELOAD="$LIBPY" \
+            PYTHONPATH="$APP_PYTHONPATH" \
+            CELERY_BROKER_URL="$RUNTIME_BROKER_URL" \
+            CELERY_RESULT_BACKEND="$RUNTIME_RESULT_BACKEND" \
+            CELERY_TASK_DEFAULT_QUEUE="$RUNTIME_QUEUE" \
+            "$VENV/bin/celery" \
+            -A "$target" \
+            worker \
+            --beat \
+            --schedule="$RUNTIME/celerybeat-schedule" \
+            --queues="$RUNTIME_QUEUE" \
+            --loglevel="${INLOOPID_CELERY_LOGLEVEL:-INFO}" \
+            --pool="${INLOOPID_CELERY_POOL:-solo}" \
+            --hostname='inloopid@%h' \
+            --pidfile="$CELERY_PIDFILE"
+
+    ) >>"$CELERY_LOG" 2>&1 &
+
+    for _ in \
+        1 2 3 4 5 6 7 8 9 10 \
+        11 12 13 14 15 16 17 18 19 20 \
+        21 22 23 24 25 26 27 28 29 30
+    do
+        if pid_alive "$CELERY_PIDFILE" &&
+           celery_ping
+        then
+            ok "Celery worker spuštěn a odpovídá."
+            return 0
+        fi
+
+        sleep 0.5
+    done
+
+    printf '\n===== CELERY START FAILURE LOG =====\n' >&2
+    tail -n 100 "$CELERY_LOG" >&2 || true
+
+    die "Celery worker nenaběhl nebo neodpovídá."
+}
+
+start_web() {
+    if pid_alive "$WEB_PIDFILE"; then
+
+        if web_ready_ok; then
+            ok "Web už běží a je READY (PID $(cat "$WEB_PIDFILE"))."
+            return 0
+        fi
+
+        die "Web PID $(cat "$WEB_PIDFILE") běží, ale readiness selhává."
+    fi
+
+    if port_open "$WEB_HOST" "$WEB_PORT"; then
+        die "Port $WEB_HOST:$WEB_PORT používá cizí proces."
+    fi
+
+    say "Start Gunicorn"
+
+    rm -f "$WEB_PIDFILE"
+
+    (
+        cd "$PROJECT/backend"
+
+        exec env \
+            LD_PRELOAD="$LIBPY" \
+            PYTHONPATH="$APP_PYTHONPATH" \
+            CELERY_BROKER_URL="$RUNTIME_BROKER_URL" \
+            CELERY_RESULT_BACKEND="$RUNTIME_RESULT_BACKEND" \
+            CELERY_TASK_DEFAULT_QUEUE="$RUNTIME_QUEUE" \
+            "$VENV/bin/gunicorn" \
+            --bind "$WEB_HOST:$WEB_PORT" \
+            --workers="${INLOOPID_WEB_WORKERS:-1}" \
+            --threads="${INLOOPID_WEB_THREADS:-2}" \
+            --timeout="${INLOOPID_WEB_TIMEOUT:-120}" \
+            --pid "$WEB_PIDFILE" \
+            --access-logfile - \
+            --error-logfile - \
+            --capture-output \
+            app:app
+
+    ) >>"$WEB_LOG" 2>&1 &
+
+    for _ in \
+        1 2 3 4 5 6 7 8 9 10 \
+        11 12 13 14 15 16 17 18 19 20 \
+        21 22 23 24 25 26 27 28 29 30
+    do
+        if pid_alive "$WEB_PIDFILE" &&
+           web_ready_ok
+        then
+            ok "Web spuštěn a READY na http://$WEB_HOST:$WEB_PORT"
+            return 0
+        fi
+
+        sleep 0.5
+    done
+
+    printf '\n===== WEB START FAILURE =====\n' >&2
+
+    printf 'Liveness: ' >&2
+    if web_http_ok; then
+        printf 'OK\n' >&2
+    else
+        printf 'FAIL\n' >&2
+    fi
+
+    printf '\nLast web log:\n' >&2
+    tail -n 100 "$WEB_LOG" >&2 || true
+
+    die "Web server nenaběhl do READY stavu."
+}
+
+stop_web() {
+    safe_stop_pidfile \
+        "$WEB_PIDFILE" \
+        "$VENV/bin/gunicorn" \
+        "Gunicorn" || true
+}
+
+stop_celery() {
+    safe_stop_pidfile \
+        "$CELERY_PIDFILE" \
+        "$VENV/bin/celery" \
+        "Celery" || true
+}
+
+stop_redis() {
+    local owner
+    local pid
+
+    if [ ! -f "$REDIS_OWNERFILE" ]; then
+        ok "Redis není vlastněn launcherem; nezastavuji ho."
+        return 0
+    fi
+
+    owner="$(cat "$REDIS_OWNERFILE" 2>/dev/null || true)"
+    pid="$(cat "$REDIS_PIDFILE" 2>/dev/null || true)"
+
+    if [ -z "$owner" ] ||
+       [ "$owner" != "$pid" ]
+    then
+        warn "Redis ownership metadata nesedí."
+        warn "Redis NEZASTAVUJI."
+        return 1
+    fi
+
+    safe_stop_pidfile \
+        "$REDIS_PIDFILE" \
+        "redis-server" \
+        "Redis" ||
+        return 1
+
+    rm -f "$REDIS_OWNERFILE"
+}
+
+status() {
+    printf 'InLoopID runtime\n'
+    printf '================\n'
+    printf 'Broker : %s\n' "$RUNTIME_BROKER_URL"
+    printf 'Queue  : %s\n' "$RUNTIME_QUEUE"
+
+    if redis_ping; then
+        if pid_alive "$REDIS_PIDFILE" &&
+           [ -f "$REDIS_OWNERFILE" ]
+        then
+            printf \
+                'Redis  : RUNNING (managed, PID %s)\n' \
+                "$(cat "$REDIS_PIDFILE")"
+        else
+            printf 'Redis  : RUNNING (external)\n'
+        fi
+    else
+        printf 'Redis  : STOPPED\n'
+    fi
+
+    if pid_alive "$CELERY_PIDFILE"; then
+        printf \
+            'Celery : RUNNING (PID %s)\n' \
+            "$(cat "$CELERY_PIDFILE")"
+    else
+        printf 'Celery : STOPPED\n'
+    fi
+
+    if pid_alive "$WEB_PIDFILE"; then
+
+        if web_http_ok; then
+            printf \
+                'Web    : RUNNING + HTTP OK (PID %s, http://%s:%s)\n' \
+                "$(cat "$WEB_PIDFILE")" \
+                "$WEB_HOST" \
+                "$WEB_PORT"
+        else
+            printf \
+                'Web    : RUNNING, HTTP NOT READY (PID %s)\n' \
+                "$(cat "$WEB_PIDFILE")"
+        fi
+
+    else
+        printf 'Web    : STOPPED\n'
+    fi
+}
+
+health() {
+    local failures=0
+
+    say "Health"
+
+    if redis_ping; then
+        ok "Redis PONG"
+    else
+        warn "Redis FAIL"
+        failures=$((failures + 1))
+    fi
+
+    if pid_alive "$CELERY_PIDFILE" &&
+       celery_ping
+    then
+        ok "Celery pong"
+    else
+        warn "Celery FAIL"
+        failures=$((failures + 1))
+    fi
+
+    if pid_alive "$WEB_PIDFILE" &&
+       web_ready_ok
+    then
+        ok "Web READY"
+    else
+        warn "Web FAIL"
+        failures=$((failures + 1))
+    fi
+
+    [ "$failures" -eq 0 ] ||
+        die "HEALTH FAIL ($failures komponent)"
+
+    ok "HEALTH PASS"
+}
+
+start_all() {
+    preflight
+    start_redis
+    start_celery
+    start_web
+    health
+    status
+}
+
+stop_all() {
+    say "Stop InLoopID"
+
+    stop_web
+    stop_celery
+    stop_redis
+
+    status
+}
+
+logs() {
+    local which="${1:-all}"
+
+    case "$which" in
+        web)
+            tail -n 150 "$WEB_LOG"
+            ;;
+
+        celery)
+            tail -n 150 "$CELERY_LOG"
+            ;;
+
+        redis)
+            tail -n 150 "$REDIS_LOG"
+            ;;
+
+        all)
+            printf '\n===== WEB =====\n'
+            tail -n 80 "$WEB_LOG" 2>/dev/null || true
+
+            printf '\n===== CELERY =====\n'
+            tail -n 80 "$CELERY_LOG" 2>/dev/null || true
+
+            printf '\n===== REDIS =====\n'
+            tail -n 80 "$REDIS_LOG" 2>/dev/null || true
+            ;;
+
+        *)
+            die "logs: použij web|celery|redis|all"
+            ;;
+    esac
+}
+
+case "${1:-status}" in
+    preflight)
+        preflight
+        ;;
+
+    start)
+        start_all
+        ;;
+
+    stop)
+        stop_all
+        ;;
+
+    restart)
+        stop_all
+        start_all
+        ;;
+
+    status)
+        status
+        ;;
+
+    health)
+        health
+        ;;
+
+    logs)
+        logs "${2:-all}"
+        ;;
+
+    *)
+        cat <<USAGE
+Použití:
+  $0 preflight
+  $0 start
+  $0 status
+  $0 health
+  $0 logs [all|web|celery|redis]
+  $0 restart
+  $0 stop
+
+Volitelné proměnné:
+  INLOOPID_PORT=8000
+  INLOOPID_HOST=127.0.0.1
+  INLOOPID_WEB_WORKERS=1
+  INLOOPID_WEB_THREADS=2
+  INLOOPID_CELERY_POOL=solo
+USAGE
+        exit 2
+        ;;
+esac
